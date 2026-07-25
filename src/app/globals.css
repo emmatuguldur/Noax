@@ -59,10 +59,11 @@
   left: 50%;
   width: clamp(19rem, 40vw, 29rem);
   transform: translate(-50%, -46%);
-  opacity: 0.7;
-  /* The artwork is near-black; screen lets its core glow on the void while the
-     dark petals dissolve into it (edges feather for free). */
-  mix-blend-mode: screen;
+  opacity: 0.16;
+  /* The artwork is near-black, so on the void it only reads if lifted. Invert
+     turns the petals light and the whole flower shows as a faint watermark;
+     screen/brightness lifted only the bright core, which looked like nothing. */
+  filter: invert(1);
   pointer-events: none;
   user-select: none;
   /* Feather the edges into the page so the mark melts in rather than sitting
@@ -87,14 +88,13 @@
   margin: 0;
   font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
   font-weight: 400;
-  font-size: clamp(2.4rem, 7vw, 4.6rem);
-  letter-spacing: 0.3em;
-  /* Letter-spacing adds a trailing gap; pull it back so the mark reads centred. */
-  margin-right: -0.3em;
+  /* Scaled down in v3 — a modest masthead over the larger shirt, closer in
+     weight to the View button and labels beneath it. */
+  font-size: clamp(1.5rem, 3.6vw, 2.4rem);
+  letter-spacing: 0.28em;
+  margin-right: -0.28em;
   color: var(--paper);
-  /* Keep the light letters legible over the flower's luminous core. */
-  text-shadow: 0 0 30px rgba(11, 11, 12, 0.85), 0 0 10px rgba(11, 11, 12, 0.7),
-    0 0 3px rgba(11, 11, 12, 0.6);
+  text-shadow: 0 0 18px rgba(11, 11, 12, 0.7), 0 0 4px rgba(11, 11, 12, 0.6);
   line-height: 1;
 }
 
@@ -165,6 +165,12 @@
   object-fit: contain;
   transition: opacity 260ms ease;
   user-select: none;
+}
+
+.ascii-follow {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
 }
 
 .ascii-layer {
@@ -290,59 +296,58 @@
 .pip-on { background: var(--ember); }
 
 /* ---------------------------------------------------------------------------
-   Shape reveal — centered, scroll-triggered
+   Shapes — scattered in the hero on load, scrubbed into a centered row
+
+   The field is a fixed overlay; ShapeField writes each shape's viewport-space
+   position, scale and label opacity per frame. On load the shapes sit at their
+   loose hero anchors around the shirt; scrolling drags them into the row, which
+   is the destination — there is no docked navbar.
 --------------------------------------------------------------------------- */
-.shape-reveal {
-  min-height: 92vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(2.5rem, 6vh, 4.5rem);
-  padding: clamp(4rem, 12vh, 8rem) clamp(1rem, 5vw, 4rem);
-  border-top: 1px solid rgba(237, 233, 226, 0.06);
+.shape-spacer {
+  /* Pure scroll distance: room to drive the convergence and land on the
+     assembled row. The shapes live on the fixed overlay, not in here. */
+  height: 120vh;
+  pointer-events: none;
 }
 
-.shape-reveal-eyebrow {
+.shape-field {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+}
+
+.shape-field-eyebrow {
+  position: fixed;
+  top: calc(50% - clamp(7rem, 15vh, 10.5rem));
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 10px;
   letter-spacing: 0.34em;
   text-transform: uppercase;
   color: var(--ash);
+  opacity: var(--assembled, 0);
+  pointer-events: none;
 }
 
-.shape-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(1.5rem, 5vw, 4.5rem);
-  align-items: start;
-  justify-items: center;
-  width: 100%;
-  max-width: 60rem;
-}
-
-@media (max-width: 640px) {
-  .shape-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: clamp(2rem, 9vw, 3.5rem);
-    max-width: 22rem;
-  }
-}
-
+/* Positioned entirely by ShapeField's per-frame transform (viewport-space,
+   from the top-left of the fixed field). Inline width/height set the size. */
 .nav-shape {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.1rem;
-  width: clamp(6rem, 12vw, 9.5rem);
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
   text-decoration: none;
-  will-change: transform, opacity;
+  pointer-events: auto;
+  will-change: transform;
 }
 
 .nav-shape-perspective {
   display: block;
   width: 100%;
-  aspect-ratio: 1;
+  height: 100%;
   perspective: 780px;
 }
 
@@ -370,19 +375,23 @@
   filter: invert(1) drop-shadow(0 0 16px rgba(237, 233, 226, 0.3));
 }
 
+/* Sits under the shape; its opacity is driven by --lo, which ShapeField ramps
+   up only as the shapes line up into the row. */
 .nav-shape-label {
+  position: absolute;
+  top: calc(100% + 0.65rem);
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.28em;
   text-transform: uppercase;
+  white-space: nowrap;
   color: var(--paper);
-  opacity: 0.6;
-  transition: opacity 220ms ease;
+  opacity: var(--lo, 0);
 }
-
-.nav-shape:hover .nav-shape-label,
-.nav-shape:focus-visible .nav-shape-label { opacity: 1; }
 
 /* ---------------------------------------------------------------------------
    Route pages
