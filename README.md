@@ -77,3 +77,33 @@ Built without a browser here, so please sanity-check: the flower-watermark
 brightness under the wordmark (tune `.brand-flower` opacity / blend), hero
 vertical rhythm on short viewports, the reveal's ScrollTrigger start/end feel,
 and ASCII fit at both resolutions. Reduced-motion is honored throughout.
+
+---
+
+## v4 — atmosphere pass
+
+- **Flower, fixed for real.** It kept disappearing because the brand mark had no
+  stacking context, so the flower's negative `z-index` resolved against the root
+  and the opaque page background painted over it. The mark now isolates its own
+  stacking context and the flower sits at `z-index: 0` — the faint inverted
+  watermark is finally visible behind the wordmark.
+- **Film grain** (`components/GrainOverlay.tsx`) — a fixed, full-viewport canvas
+  tiling a small noise pattern that regenerates a few times a second, at ~5%
+  opacity, so the whole page reads as printed rather than flat. Static under
+  reduced-motion.
+- **Quote section** (`components/QuoteSection.tsx`) — a full-bleed section after
+  the hero: one line of (placeholder) copy in a display serif (Instrument
+  Serif), centered with generous space, wrapped in an **organic arch frame** —
+  the one non-rectangular framing device in the layout.
+- **Ambient shapes** (`components/AmbientField.tsx`) — small, faint stipple
+  shapes drifting behind the hero and quote, reusing the pointillism system
+  (`ParticleCanvas`). Purely decorative — no links, no labels. Capped per screen
+  size since each is a live canvas.
+- **Shapes now assemble, then depart.** `ShapeField` is rewritten to read scroll
+  position directly (no ScrollTrigger): the shapes converge from their hero
+  scatter into the centered row, hold, then the whole row lifts and fades as you
+  continue — clearing the space for the quote section instead of sitting fixed
+  over it.
+- **Accent stays restrained.** No new colours: grain is grey, ambient/arch/quote
+  are paper and ash, the flower is the inverted original. Ember remains reserved
+  for interactive states.
