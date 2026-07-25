@@ -49,17 +49,21 @@
   position: relative;
   display: grid;
   place-items: center;
+  /* Own stacking context: without it, the flower's negative z-index resolved
+     against the root and the opaque body background painted over it — which is
+     why it kept "disappearing". */
+  isolation: isolate;
   padding-top: clamp(3.5rem, 9vh, 6rem);
 }
 
 .brand-flower {
   position: absolute;
-  z-index: -1;
+  z-index: 0;
   top: 50%;
   left: 50%;
   width: clamp(19rem, 40vw, 29rem);
   transform: translate(-50%, -46%);
-  opacity: 0.16;
+  opacity: 0.18;
   /* The artwork is near-black, so on the void it only reads if lifted. Invert
      turns the petals light and the whole flower shows as a faint watermark;
      screen/brightness lifted only the bright core, which looked like nothing. */
@@ -104,9 +108,43 @@
 .hero {
   position: relative;
   min-height: 100svh;
+  /* Positioning + stacking context for the ambient layer beneath the content. */
+  isolation: isolate;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  min-height: 100svh;
   display: flex;
   flex-direction: column;
   padding: 0 clamp(1rem, 5vw, 4rem) clamp(1.5rem, 4vh, 2.75rem);
+}
+
+/* Ambient decorative stipple shapes — behind content, drifting, non-interactive. */
+.ambient {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ambient-node {
+  position: absolute;
+  display: block;
+  opacity: 0.22;
+  will-change: transform;
+  animation: ambientDrift var(--dur, 22s) var(--delay, 0s) ease-in-out infinite alternate;
+}
+
+@keyframes ambientDrift {
+  from {
+    transform: translate3d(-8px, 6px, 0) rotate(-5deg);
+  }
+  to {
+    transform: translate3d(12px, -16px, 0) rotate(7deg);
+  }
 }
 
 .hero-stage {
@@ -304,9 +342,9 @@
    is the destination — there is no docked navbar.
 --------------------------------------------------------------------------- */
 .shape-spacer {
-  /* Pure scroll distance: room to drive the convergence and land on the
-     assembled row. The shapes live on the fixed overlay, not in here. */
-  height: 120vh;
+  /* Pure scroll distance: room for the row to assemble, hold, then lift away
+     before the quote section. The shapes live on the fixed overlay, not here. */
+  height: 75vh;
   pointer-events: none;
 }
 
@@ -563,6 +601,78 @@
   margin-top: 0.85rem;
   font-size: 0.875rem;
   line-height: 1.6;
+  color: rgba(237, 233, 226, 0.5);
+}
+
+/* ---------------------------------------------------------------------------
+   Film grain — site-wide printed texture
+--------------------------------------------------------------------------- */
+.grain {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 30; /* above the page, below the interactive shape overlay (40) */
+  pointer-events: none;
+  opacity: 0.05;
+}
+
+/* ---------------------------------------------------------------------------
+   Quote / manifesto section (carries the ornamental arch frame)
+--------------------------------------------------------------------------- */
+.quote {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(4rem, 12vh, 9rem) clamp(1.5rem, 6vw, 5rem);
+  border-top: 1px solid rgba(237, 233, 226, 0.06);
+}
+
+.quote-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  padding: clamp(3rem, 8vw, 6rem) clamp(2rem, 7vw, 6rem);
+}
+
+/* Organic, non-rectangular framing device — an open arch behind the line. */
+.quote-arch {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  left: 50%;
+  width: min(30rem, 84vw);
+  height: auto;
+  transform: translate(-50%, -52%);
+  color: rgba(237, 233, 226, 0.16);
+  pointer-events: none;
+}
+
+.quote-text {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  max-width: 18ch;
+  text-align: center;
+  font-family: var(--font-serif), Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  font-size: clamp(2rem, 6vw, 4.4rem);
+  line-height: 1.12;
+  letter-spacing: 0.005em;
+  color: var(--paper);
+}
+
+.quote-dash {
+  color: var(--ash);
+}
+
+.quote-placeholder {
+  font-style: italic;
   color: rgba(237, 233, 226, 0.5);
 }
 

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, Jost, Martian_Mono } from "next/font/google";
+import { Archivo, Instrument_Serif, Jost, Martian_Mono } from "next/font/google";
 
 import "./globals.css";
 
@@ -29,6 +29,15 @@ const sans = Archivo({
   variable: "--font-sans",
 });
 
+// Display serif for the manifesto/quote line — elegant, high-contrast, and a
+// deliberate contrast to the geometric wordmark and the mono.
+const serif = Instrument_Serif({
+  subsets: ["latin"],
+  display: "swap",
+  weight: "400",
+  variable: "--font-serif",
+});
+
 export const metadata: Metadata = {
   title: "N.O.A.X — stipple prints on heavyweight cotton",
   description:
@@ -42,7 +51,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${mono.variable} ${sans.variable}`}>
+    <html lang="en" className={`${display.variable} ${mono.variable} ${sans.variable} ${serif.variable}`}>
       <body>{children}</body>
     </html>
   );

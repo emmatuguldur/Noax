@@ -1,28 +1,27 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import NavShape from "@/components/NavShape";
 import { NAV_ITEMS } from "@/data/navItems";
 import { useIsCompact, usePrefersReducedMotion } from "@/lib/hooks";
 
 /**
- * The four shapes as a fixed overlay.
+ * The four shapes as a fixed overlay, driven directly by scroll position.
  *
- * On load (progress 0) they sit scattered around the shirt at their loose hero
- * positions. As you scroll past the hero, one scroll-tied progress value drags
- * them — scrub-style, not a hard cut — into a centered, evenly-spaced
- * horizontal row, with their labels fading in as they line up. That row is the
- * destination; there is no docked navbar.
+ * On load they sit scattered around the shirt at their loose hero anchors. As
+ * you scroll they converge — smoothly, tied to scroll, not a hard cut — into a
+ * centered, evenly-spaced row ("Four ways in"), labels fading in as they line
+ * up. That row is the destination. Then, as you keep scrolling toward the quote
+ * section, the whole assembled row lifts and fades away so it doesn't sit on top
+ * of the content below (emergence-style: assemble, then move past).
  *
- * ScrollTrigger only reports progress. A single rAF loop interpolates each
- * shape from hero-scatter to row-slot and composes the idle float into the
- * same transform, so the two never fight over one style property.
+ * Progress is read straight from window.scrollY / viewport height, so the whole
+ * thing is deterministic — no ScrollTrigger. One rAF loop writes every
+ * transform and composes the idle float into it.
  */
-const DESKTOP = { size: 118, rowScale: 0.86, rowGap: 232, rowY: 0.5 };
-const COMPACT = { size: 58, rowScale: 0.9, rowGap: 0.2, rowY: 0.52 };
+const DESKTOP = { size: 118, rowScale: 0.9, rowGap: 224, rowY: 0.5 };
+const COMPACT = { size: 58, rowScale: 0.92, rowGapFrac: 0.2, rowY: 0.5 };
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
@@ -39,37 +38,14 @@ export default function ShapeField() {
   const shellRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const plateRefs = useRef<(HTMLSpanElement | null)[]>([]);
 
-  const target = useRef(0);
-  const smooth = useRef(0);
-
   const compactRef = useRef(compact);
   compactRef.current = compact;
   const reduceRef = useRef(reduceMotion);
   reduceRef.current = reduceMotion;
 
-  // Scroll progress across the first ~viewport of scrolling. Reports only.
-  useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
-    const trigger = ScrollTrigger.create({
-      start: 0,
-      end: () => window.innerHeight * 0.9,
-      scrub: true,
-      invalidateOnRefresh: true,
-      onUpdate: (self) => {
-        target.current = self.progress;
-      },
-      onRefresh: (self) => {
-        target.current = self.progress;
-      },
-    });
-    return () => trigger.kill();
-  }, []);
-
-  // One loop writes every transform.
   useEffect(() => {
     let frame = 0;
     const view = { w: window.innerWidth, h: window.innerHeight };
-
     const measure = () => {
       view.w = window.innerWidth;
       view.h = window.innerHeight;
@@ -78,29 +54,26 @@ export default function ShapeField() {
     window.addEventListener("orientationchange", measure);
 
     const draw = (now: number) => {
-      const m = compactRef.current ? COMPACT : DESKTOP;
       const still = reduceRef.current;
+      const isCompact = compactRef.current;
+      const m = isCompact ? COMPACT : DESKTOP;
+      const vh = view.h || 1;
 
-      if (still) {
-        smooth.current = target.current;
-      } else {
-        smooth.current += (target.current - smooth.current) * 0.12;
-        if (Math.abs(target.current - smooth.current) < 0.0004) {
-          smooth.current = target.current;
-        }
-      }
+      // Scroll progress in viewport units. Reduced motion parks on the row.
+      const P = window.scrollY / vh;
+      const converge = still ? 1 : smoothstep(0, 0.7, P);
+      const depart = still ? 0 : smoothstep(1.02, 1.6, P);
 
-      const p = smooth.current;
-      const damp = still ? 0 : 1 - p;
       const t = now / 1000;
-      const labelOpacity = smoothstep(0.62, 1, p);
-      if (fieldRef.current) {
-        fieldRef.current.style.setProperty("--assembled", String(labelOpacity));
-      }
+      const gap = isCompact ? view.w * COMPACT.rowGapFrac : DESKTOP.rowGap;
+      const rowY = vh * m.rowY;
+      const departRise = depart * vh * 0.5;
 
-      // Row geometry: four slots centred on the viewport.
-      const gap = compactRef.current ? view.w * (m.rowGap as number) : (m.rowGap as number);
-      const rowY = view.h * m.rowY;
+      if (fieldRef.current) {
+        fieldRef.current.style.opacity = String(1 - depart);
+        fieldRef.current.style.transform = `translateY(${-departRise}px)`;
+        fieldRef.current.style.setProperty("--assembled", String(converge * (1 - depart)));
+      }
 
       for (let i = 0; i < NAV_ITEMS.length; i += 1) {
         const item = NAV_ITEMS[i];
@@ -108,32 +81,30 @@ export default function ShapeField() {
         const plate = plateRefs.current[i];
         if (!shell) continue;
 
-        const anchor = compactRef.current ? item.heroMobile : item.hero;
+        const anchor = isCompact ? item.heroMobile : item.hero;
         const heroX = view.w * anchor.x;
-        const heroY = view.h * anchor.y;
-
+        const heroY = vh * anchor.y;
         const rowX = view.w / 2 + (item.rowOrder - (NAV_ITEMS.length - 1) / 2) * gap;
 
-        // Idle motion lives in the hero and fades out as the shape converges.
-        const bob = Math.sin(t * item.speed * 2 + item.phase) * 9 * damp;
-        const sway = Math.cos(t * item.speed * 1.4 + item.phase) * 6 * damp;
+        // Idle motion lives in the scattered state and settles out on the row.
+        const floatAmt = still ? 0 : 1 - converge;
+        const bob = Math.sin(t * item.speed * 2 + item.phase) * 9 * floatAmt;
+        const sway = Math.cos(t * item.speed * 1.4 + item.phase) * 6 * floatAmt;
 
-        const x = lerp(heroX + sway, rowX, p);
-        const y = lerp(heroY + bob, rowY, p);
-        const scale = lerp(1, m.rowScale, p);
+        const x = lerp(heroX + sway, rowX, converge);
+        const y = lerp(heroY + bob, rowY, converge);
+        const scale = lerp(1, m.rowScale, converge);
 
-        shell.style.transform = `translate3d(${x - m.size / 2}px, ${
-          y - m.size / 2
-        }px, 0) scale(${scale})`;
-        shell.style.setProperty("--lo", String(labelOpacity));
+        shell.style.transform = `translate3d(${x - m.size / 2}px, ${y - m.size / 2}px, 0) scale(${scale})`;
+        shell.style.setProperty("--lo", String(converge * (1 - depart)));
 
         if (plate) {
           if (still) {
             plate.style.transform = "";
           } else {
-            const rx = Math.sin(t * item.speed * 1.7 + item.phase) * 9 * damp;
-            const ry = Math.cos(t * item.speed * 1.3 + item.phase * 0.7) * 14 * damp;
-            const rz = Math.sin(t * item.speed * 0.9 + item.phase * 1.4) * 4 * damp;
+            const rx = Math.sin(t * item.speed * 1.7 + item.phase) * 9 * floatAmt;
+            const ry = Math.cos(t * item.speed * 1.3 + item.phase * 0.7) * 14 * floatAmt;
+            const rz = Math.sin(t * item.speed * 0.9 + item.phase * 1.4) * 4 * floatAmt;
             plate.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg)`;
           }
         }
@@ -152,7 +123,7 @@ export default function ShapeField() {
 
   return (
     <>
-      {/* Scroll distance that drives the convergence; the shapes are fixed. */}
+      {/* Scroll distance for the hold + depart, before the quote section. */}
       <div className="shape-spacer" aria-hidden="true" />
 
       <nav ref={fieldRef} className="shape-field" aria-label="Explore">
