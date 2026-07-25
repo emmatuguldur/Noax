@@ -22,14 +22,19 @@ No persistent navbar.
     always-visible **View** button swaps ASCII ↔ the real photograph; the label
     flips (`View` ⇄ `ASCII`). A simple **arrow** at the far right cycles the
     five print slots.
-  - The brand flower is the flat original artwork used as a **screen-blended
-    watermark** with feathered (radial-masked) edges — its luminous core glows
-    on the dark ground while the near-black petals dissolve into it. The
-    wordmark is set in **Jost** and sits **on top** of the flower.
-- **Shape reveal.** As you scroll past the hero, the four shapes rise and fade
-  in together, centered, and keep a gentle 3D idle float. Each links to its
-  page. (Modeled on emergenceprojects.com's reveal — the old scroll-to-navbar
-  docking is gone.)
+  - The brand flower is the flat original artwork as a faint **inverted
+    watermark** (`filter: invert(1)`, low opacity) with feathered (radial-masked)
+    edges. The artwork is near-black, so on the dark ground inverting is what
+    makes the whole flower read as a soft watermark rather than vanishing (a
+    screen/brightness lift only showed the bright core). The **Jost** wordmark
+    sits **on top**, sized as a modest masthead over the larger shirt.
+- **Shapes.** On load the four shapes sit **scattered around the shirt** at
+  loose hero positions. As you scroll past the hero they **scrub into a centered
+  row** ("Four ways in"), labels fading in as they line up — the row is the
+  scroll destination, not a static section, and not a docked navbar. Each shape
+  links to its page. (Modeled on emergenceprojects.com.) They live on a fixed
+  overlay (`ShapeField`) driven by one rAF loop; a `.shape-spacer` provides the
+  scroll distance.
 
 **Routes** — `/about`, `/story`, `/shop`, `/contact`, each a real page (not an
 anchor) sharing a minimal header/footer via `PageShell`. `/shop` lists the five
@@ -38,10 +43,14 @@ slots.
 ## The three rendering systems
 - **ASCII renderer** (`lib/ascii.ts`, `components/AsciiRenderer.tsx`) — samples
   the shirt to a luminance grid and prints characters, fitted to the stage using
-  the font's real advance width. This is the shirt's default state.
-- **Scroll reveal** (`components/ShapeReveal.tsx`) — one rAF loop composes each
-  shape's scroll-driven entrance (staggered rise + fade) and its idle 3D float
-  into a single transform, so the two never fight.
+  the font's real advance width. This is the shirt's default state. While the
+  ASCII is showing and the stage is hovered, it **drifts toward the cursor** —
+  eased/lagged (a small ~16px offset), so the motion is subtle, not 1:1. Photo
+  mode and reduced-motion don't drift.
+- **Shape convergence** (`components/ShapeField.tsx`) — a fixed overlay whose
+  rAF loop interpolates each shape from its hero-scatter anchor to its centered
+  row slot by scroll progress, composing the idle 3D float into the same
+  transform so the two never fight.
 - **Pointillism / stipple** (`lib/stipple.ts`, `lib/noise.ts`,
   `components/ParticleCanvas.tsx`) — **retained but not wired in.** v2 removed it
   from the brand mark; the code is kept intact (it's verified and self-contained)

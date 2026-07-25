@@ -1,15 +1,17 @@
 import Hero from "@/components/Hero";
-import ShapeReveal from "@/components/ShapeReveal";
+import ShapeField from "@/components/ShapeField";
 
 /**
- * Homepage: hero (shirt + brand mark) and the centered shape reveal. No inline
- * About/Contact/Shop/Story content — those are their own routes now.
+ * Homepage: the hero (shirt + brand mark), then the shape field — four shapes
+ * scattered around the shirt on load that scrub into a centered row as you
+ * scroll. No inline About/Contact/Shop/Story content; those are their own
+ * routes, reached by the shapes.
  */
 export default function Page() {
   return (
     <main>
       <Hero />
-      <ShapeReveal />
+      <ShapeField />
     </main>
   );
 }
