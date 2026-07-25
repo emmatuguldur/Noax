@@ -1,0 +1,569 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------------
+   Tokens
+
+   Two inks and one ember. The stipple drawings are black on paper; the site
+   runs them the other way round, so `paper` is the ink and `void` is the
+   sheet. `ember` is lifted from the flower's core and appears only where a
+   single accent is earned.
+--------------------------------------------------------------------------- */
+:root {
+  --void: #0b0b0c;
+  --slate: #141416;
+  --paper: #ede9e2;
+  --ash: #6e6c6a;
+  --ember: #c9601a;
+}
+
+@layer base {
+  html {
+    background: var(--void);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--void);
+    color: var(--paper);
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: var(--ember);
+    color: var(--void);
+  }
+
+  :focus-visible {
+    outline: 1px solid var(--paper);
+    outline-offset: 3px;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Brand mark — flat flower watermark, wordmark in front
+--------------------------------------------------------------------------- */
+.brand-mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding-top: clamp(3.5rem, 9vh, 6rem);
+}
+
+.brand-flower {
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  left: 50%;
+  width: clamp(19rem, 40vw, 29rem);
+  transform: translate(-50%, -46%);
+  opacity: 0.7;
+  /* The artwork is near-black; screen lets its core glow on the void while the
+     dark petals dissolve into it (edges feather for free). */
+  mix-blend-mode: screen;
+  pointer-events: none;
+  user-select: none;
+  /* Feather the edges into the page so the mark melts in rather than sitting
+     on it as a rectangle. */
+  -webkit-mask-image: radial-gradient(
+    ellipse 62% 62% at 50% 48%,
+    #000 34%,
+    rgba(0, 0, 0, 0.4) 58%,
+    transparent 74%
+  );
+  mask-image: radial-gradient(
+    ellipse 62% 62% at 50% 48%,
+    #000 34%,
+    rgba(0, 0, 0, 0.4) 58%,
+    transparent 74%
+  );
+}
+
+.brand-word {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 400;
+  font-size: clamp(2.4rem, 7vw, 4.6rem);
+  letter-spacing: 0.3em;
+  /* Letter-spacing adds a trailing gap; pull it back so the mark reads centred. */
+  margin-right: -0.3em;
+  color: var(--paper);
+  /* Keep the light letters legible over the flower's luminous core. */
+  text-shadow: 0 0 30px rgba(11, 11, 12, 0.85), 0 0 10px rgba(11, 11, 12, 0.7),
+    0 0 3px rgba(11, 11, 12, 0.6);
+  line-height: 1;
+}
+
+/* ---------------------------------------------------------------------------
+   Hero
+--------------------------------------------------------------------------- */
+.hero {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  padding: 0 clamp(1rem, 5vw, 4rem) clamp(1.5rem, 4vh, 2.75rem);
+}
+
+.hero-stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1rem, 3vh, 2.5rem) 0;
+}
+
+.hero-foot {
+  color: rgba(237, 233, 226, 0.32);
+}
+
+.signature-line {
+  display: block;
+  width: 100%;
+  height: clamp(40px, 7vh, 84px);
+}
+
+.scroll-hint {
+  margin-top: 0.4rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--ash);
+  text-align: center;
+}
+
+/* ---------------------------------------------------------------------------
+   Shirt — the primary content, sized up
+--------------------------------------------------------------------------- */
+.shirt-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.shirt-stage {
+  position: relative;
+  /* Matches the product cutout framing (544 x 458). Deliberately large. */
+  width: min(46rem, 88vw, 74vh);
+  aspect-ratio: 544 / 458;
+}
+
+.shirt-layer {
+  position: absolute;
+  inset: 0;
+}
+
+.shirt-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: opacity 260ms ease;
+  user-select: none;
+}
+
+.ascii-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 240ms ease;
+}
+
+.ascii-plate {
+  margin: 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-weight: 400;
+  font-variant-ligatures: none;
+  white-space: pre;
+  color: var(--paper);
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes shirtSlideOut {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(-42%); opacity: 0; }
+}
+
+@keyframes shirtSlideIn {
+  from { transform: translateX(42%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.slide-out {
+  animation: shirtSlideOut 620ms cubic-bezier(0.65, 0, 0.2, 1) forwards;
+}
+
+.slide-in {
+  animation: shirtSlideIn 620ms cubic-bezier(0.65, 0, 0.2, 1) both;
+}
+
+/* Simple arrow control, parked at the far right of the display area. */
+.arrow-next {
+  position: absolute;
+  right: clamp(-2.75rem, -4vw, -1rem);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(237, 233, 226, 0.22);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--paper);
+  cursor: pointer;
+  transition: border-color 200ms ease, background 200ms ease, transform 200ms ease;
+}
+
+.arrow-next svg { width: 20px; height: 20px; }
+
+.arrow-next:hover,
+.arrow-next:focus-visible {
+  border-color: rgba(237, 233, 226, 0.55);
+  background: rgba(237, 233, 226, 0.05);
+  transform: translateY(-50%) translateX(2px);
+}
+
+@media (max-width: 767px) {
+  .arrow-next { width: 40px; height: 40px; right: -0.25rem; }
+  .arrow-next svg { width: 17px; height: 17px; }
+}
+
+.shirt-controls {
+  margin-top: clamp(1.5rem, 3vh, 2.25rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Always visible in v2 — it is the only control that swaps ASCII for photo. */
+.view-toggle {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--paper);
+  background: transparent;
+  border: 1px solid rgba(237, 233, 226, 0.28);
+  padding: 0.65rem 1.5rem;
+  cursor: pointer;
+  transition: border-color 200ms ease, background 200ms ease, color 200ms ease;
+}
+
+.view-toggle:hover,
+.view-toggle:focus-visible {
+  border-color: var(--ember);
+  color: var(--ember);
+}
+
+.shirt-meta {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ash);
+  text-align: center;
+}
+
+.shirt-meta-sep { margin: 0 0.5rem; color: rgba(110, 108, 106, 0.5); }
+
+.pip-row { display: flex; align-items: center; gap: 0.5rem; }
+
+.pip {
+  display: block;
+  width: 16px;
+  height: 1px;
+  background: rgba(237, 233, 226, 0.22);
+  transition: background 260ms ease;
+}
+
+.pip-on { background: var(--ember); }
+
+/* ---------------------------------------------------------------------------
+   Shape reveal — centered, scroll-triggered
+--------------------------------------------------------------------------- */
+.shape-reveal {
+  min-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(2.5rem, 6vh, 4.5rem);
+  padding: clamp(4rem, 12vh, 8rem) clamp(1rem, 5vw, 4rem);
+  border-top: 1px solid rgba(237, 233, 226, 0.06);
+}
+
+.shape-reveal-eyebrow {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+.shape-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(1.5rem, 5vw, 4.5rem);
+  align-items: start;
+  justify-items: center;
+  width: 100%;
+  max-width: 60rem;
+}
+
+@media (max-width: 640px) {
+  .shape-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(2rem, 9vw, 3.5rem);
+    max-width: 22rem;
+  }
+}
+
+.nav-shape {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+  width: clamp(6rem, 12vw, 9.5rem);
+  text-decoration: none;
+  will-change: transform, opacity;
+}
+
+.nav-shape-perspective {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  perspective: 780px;
+}
+
+.nav-shape-plate {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+  transition: filter 240ms ease;
+}
+
+.nav-shape-plate img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* Supplied drawings are ink-on-paper; flip to paper-on-void. */
+  filter: invert(1);
+  opacity: 0.88;
+  user-select: none;
+}
+
+.nav-shape:hover .nav-shape-plate,
+.nav-shape:focus-visible .nav-shape-plate {
+  filter: invert(1) drop-shadow(0 0 16px rgba(237, 233, 226, 0.3));
+}
+
+.nav-shape-label {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--paper);
+  opacity: 0.6;
+  transition: opacity 220ms ease;
+}
+
+.nav-shape:hover .nav-shape-label,
+.nav-shape:focus-visible .nav-shape-label { opacity: 1; }
+
+/* ---------------------------------------------------------------------------
+   Route pages
+--------------------------------------------------------------------------- */
+.page { min-height: 100svh; display: flex; flex-direction: column; }
+
+.page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: clamp(1.25rem, 3vh, 2rem) clamp(1rem, 5vw, 4rem);
+  border-bottom: 1px solid rgba(237, 233, 226, 0.08);
+}
+
+.page-word {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-size: 1.15rem;
+  letter-spacing: 0.28em;
+  margin-right: -0.28em;
+  color: var(--paper);
+  text-decoration: none;
+}
+
+.page-nav { display: flex; gap: clamp(1rem, 3vw, 2.25rem); }
+
+.page-nav-link {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ash);
+  text-decoration: none;
+  transition: color 200ms ease;
+}
+
+.page-nav-link:hover { color: var(--paper); }
+
+.page-main {
+  flex: 1;
+  max-width: 52rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: clamp(3.5rem, 12vh, 8rem) clamp(1rem, 5vw, 4rem);
+}
+
+.page-eyebrow {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+.page-title {
+  margin-top: 1.25rem;
+  max-width: 20ch;
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 400;
+  font-size: clamp(2rem, 5.5vw, 3.6rem);
+  letter-spacing: -0.01em;
+  line-height: 1.06;
+  color: var(--paper);
+}
+
+.page-body {
+  margin-top: clamp(2rem, 5vh, 3.25rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 36rem;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: rgba(237, 233, 226, 0.62);
+}
+
+.page-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 2.25rem clamp(1rem, 5vw, 4rem);
+  border-top: 1px solid rgba(237, 233, 226, 0.08);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+.page-foot-link { color: var(--ash); text-decoration: none; transition: color 200ms ease; }
+.page-foot-link:hover { color: var(--paper); }
+
+/* Contact */
+.contact-links {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
+}
+
+.contact-link {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(1.05rem, 3vw, 1.5rem);
+  letter-spacing: -0.01em;
+  color: var(--paper);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(237, 233, 226, 0.24);
+  padding-bottom: 0.15rem;
+  transition: border-color 220ms ease, color 220ms ease;
+}
+
+.contact-link:hover { color: var(--ember); border-color: var(--ember); }
+
+/* Shop grid (reused on the shop route) */
+.shop-grid {
+  margin-top: clamp(2.5rem, 6vh, 4rem);
+  display: grid;
+  gap: 1px;
+  background: rgba(237, 233, 226, 0.08);
+  border: 1px solid rgba(237, 233, 226, 0.08);
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+@media (min-width: 640px) {
+  .shop-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1024px) {
+  .shop-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+.shop-card {
+  background: var(--void);
+  padding: 1.5rem 1.35rem 1.35rem;
+  transition: background 260ms ease;
+}
+
+.shop-card:hover { background: var(--slate); }
+
+.shop-card-figure {
+  aspect-ratio: 544 / 458;
+  display: grid;
+  place-items: center;
+}
+
+.shop-card-figure img { width: 100%; height: 100%; object-fit: contain; }
+
+.shop-card-name {
+  margin-top: 0.5rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--paper);
+}
+
+.shop-card-meta {
+  margin-top: 0.4rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+.shop-card-blurb {
+  margin-top: 0.85rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: rgba(237, 233, 226, 0.5);
+}
+
+/* ---------------------------------------------------------------------------
+   Reduced motion
+--------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
