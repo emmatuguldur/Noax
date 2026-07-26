@@ -128,7 +128,7 @@ export default function ShirtDisplay() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={design.photo}
-            alt={`${design.name} tee, ${design.code}`}
+            alt={`${design.name}, catalogue ${design.cat}`}
             className="shirt-photo"
             style={{ opacity: asciiActive ? 0 : 1 }}
             draggable={false}
@@ -167,11 +167,13 @@ export default function ShirtDisplay() {
         </button>
 
         <p className="shirt-meta">
-          <span className="text-paper">{design.name}</span>
+          <span className="text-paper">
+            CAT. {design.cat} — {design.study}
+          </span>
           <span className="shirt-meta-sep">/</span>
-          {design.code}
+          {design.edition}
           <span className="shirt-meta-sep">/</span>
-          {design.sizes}
+          {design.spec}
         </p>
 
         <div className="pip-row" aria-hidden="true">

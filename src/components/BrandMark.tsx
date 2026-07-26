@@ -5,7 +5,7 @@
  * shown as a low-opacity watermark whose edges are dissolved by a radial mask
  * so it melts into the page rather than sitting on it as a hard rectangle.
  *
- * Stacking is flower-behind, wordmark-in-front. The wordmark is set in Jost —
+ * Stacking is flower-behind, wordmark-in-front. The wordmark is set in Inter —
  * a separate face from the ASCII monospace, per the v2 brief.
  */
 export default function BrandMark() {

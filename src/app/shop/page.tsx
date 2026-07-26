@@ -22,7 +22,7 @@ export default function ShopPage() {
             </div>
             <h2 className="shop-card-name">{design.name}</h2>
             <p className="shop-card-meta">
-              {design.code} <span aria-hidden="true">/</span> {design.sizes}
+              CAT. {design.cat} <span aria-hidden="true">/</span> {design.edition}
             </p>
             <p className="shop-card-blurb">{design.blurb}</p>
           </article>

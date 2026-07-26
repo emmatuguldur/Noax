@@ -95,8 +95,8 @@
   /* Scaled down in v3 — a modest masthead over the larger shirt, closer in
      weight to the View button and labels beneath it. */
   font-size: clamp(1.5rem, 3.6vw, 2.4rem);
-  letter-spacing: 0.28em;
-  margin-right: -0.28em;
+  letter-spacing: 0.24em;
+  margin-right: -0.24em;
   color: var(--paper);
   text-shadow: 0 0 18px rgba(11, 11, 12, 0.7), 0 0 4px rgba(11, 11, 12, 0.6);
   line-height: 1;
@@ -342,9 +342,11 @@
    is the destination — there is no docked navbar.
 --------------------------------------------------------------------------- */
 .shape-spacer {
-  /* Pure scroll distance: room for the row to assemble, hold, then lift away
-     before the quote section. The shapes live on the fixed overlay, not here. */
-  height: 75vh;
+  /* Scroll distance to reach and hold the assembled row; also hosts the
+     ambient decoration around the shape section. */
+  position: relative;
+  height: 85vh;
+  overflow: hidden;
   pointer-events: none;
 }
 
@@ -618,62 +620,131 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Quote / manifesto section (carries the ornamental arch frame)
+   Lenis smooth scroll
 --------------------------------------------------------------------------- */
-.quote {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(4rem, 12vh, 9rem) clamp(1.5rem, 6vw, 5rem);
-  border-top: 1px solid rgba(237, 233, 226, 0.06);
-}
-
-.quote-inner {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  place-items: center;
-  padding: clamp(3rem, 8vw, 6rem) clamp(2rem, 7vw, 6rem);
-}
-
-/* Organic, non-rectangular framing device — an open arch behind the line. */
-.quote-arch {
-  position: absolute;
-  z-index: 0;
-  top: 50%;
-  left: 50%;
-  width: min(30rem, 84vw);
+html.lenis,
+html.lenis body {
   height: auto;
-  transform: translate(-50%, -52%);
-  color: rgba(237, 233, 226, 0.16);
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+.lenis.lenis-smooth iframe {
   pointer-events: none;
 }
 
-.quote-text {
-  position: relative;
-  z-index: 1;
-  margin: 0;
-  max-width: 18ch;
-  text-align: center;
-  font-family: var(--font-serif), Georgia, "Times New Roman", serif;
-  font-weight: 400;
-  font-size: clamp(2rem, 6vw, 4.4rem);
-  line-height: 1.12;
-  letter-spacing: 0.005em;
-  color: var(--paper);
+/* ---------------------------------------------------------------------------
+   Ornament — hanging strings
+--------------------------------------------------------------------------- */
+.ornaments {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
 }
 
-.quote-dash {
+.ornament-string {
+  position: absolute;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform-origin: top center;
+  opacity: 0.5;
+  will-change: transform;
+  animation: stringSway var(--sway-dur, 8s) var(--sway-delay, 0s) ease-in-out infinite alternate;
+}
+
+.string-line {
+  flex: 1;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    rgba(237, 233, 226, 0.02),
+    rgba(237, 233, 226, 0.3)
+  );
+}
+
+.string-charm {
+  display: block;
+  margin-top: 2px;
+}
+
+@keyframes stringSway {
+  from {
+    transform: rotate(-2.4deg);
+  }
+  to {
+    transform: rotate(2.4deg);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Ornament — tiled geometric divider
+--------------------------------------------------------------------------- */
+.geo-divider {
+  width: 100%;
+  height: clamp(34px, 5vh, 52px);
+  color: rgba(237, 233, 226, 0.1);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Corner micro-typography (gallery placard)
+--------------------------------------------------------------------------- */
+.corner-marks {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  pointer-events: none;
+}
+
+.corner {
+  position: absolute;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
   color: var(--ash);
+  opacity: 0.62;
+  white-space: nowrap;
 }
 
-.quote-placeholder {
-  font-style: italic;
-  color: rgba(237, 233, 226, 0.5);
+.corner-tl {
+  top: clamp(0.85rem, 2.4vh, 1.5rem);
+  left: clamp(0.85rem, 2.4vw, 1.5rem);
+}
+.corner-tr {
+  top: clamp(0.85rem, 2.4vh, 1.5rem);
+  right: clamp(0.85rem, 2.4vw, 1.5rem);
+}
+.corner-bl {
+  bottom: clamp(0.85rem, 2.4vh, 1.5rem);
+  left: clamp(0.85rem, 2.4vw, 1.5rem);
+}
+.corner-br {
+  bottom: clamp(0.85rem, 2.4vh, 1.5rem);
+  right: clamp(0.85rem, 2.4vw, 1.5rem);
+}
+
+@media (max-width: 640px) {
+  /* Keep the top marks; drop the bottom pair so they don't crowd the hero foot. */
+  .corner-bl,
+  .corner-br {
+    display: none;
+  }
+  .corner {
+    font-size: 8px;
+    letter-spacing: 0.18em;
+  }
 }
 
 /* ---------------------------------------------------------------------------

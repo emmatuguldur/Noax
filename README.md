@@ -107,3 +107,49 @@ and ASCII fit at both resolutions. Reduced-motion is honored throughout.
 - **Accent stays restrained.** No new colours: grain is grey, ambient/arch/quote
   are paper and ash, the flower is the inverted original. Ember remains reserved
   for interactive states.
+
+---
+
+## v5 — ornament, editorial type, weighted motion
+
+The quote section is gone (component, styles, and the serif font it used all
+removed). With nothing below the shape row, the shapes no longer lift away —
+they converge and **rest** as the centered "Four ways in" nav, the way they
+were meant to.
+
+**Filling the empty black.** Three kinds of decoration, all built from the
+existing stipple system in a new static (no-loop) render mode, so a screen full
+of them costs almost nothing:
+
+- **Hanging ornament strings** (`OrnamentStrings`) — thin strings dropping from
+  the top edge into the hero's wide side margins, each ending in a small stipple
+  charm, swaying gently. One charm is picked out in the ember accent.
+- **Scattered decorative shapes** (`AmbientField`, rewritten) — a wider set of
+  silhouettes than the four nav shapes (rings, crosses, hexes, sparkles, beads,
+  generated as new assets under `public/decor/`) drifting in the negative space
+  of the hero and around the shape row.
+- **A tiled geometric divider** (`GeoDivider`) — a fine diamond-lattice pattern
+  bridging the hero and the shape section.
+
+**Editorial typography.** The wordmark and headers move to Inter — an
+ultra-refined grotesque in the Neue Haas / Suisse spirit — tracked wide (0.24em)
+for an exhibition-catalogue feel. The shirt metadata is now catalogue phrasing
+(`CAT. 01 — INTERFERENCE STUDY / EDITION OF 100 / SPECIFICATION`) and that's the
+real data shape going forward. Small monospace **corner marks** (`CornerMarks`)
+frame the viewport like gallery placard text — a coordinate, material specs, an
+edition line.
+
+**Weighted motion.**
+
+- **Lenis** (`SmoothScroll`) adds momentum scrolling site-wide; it smooths native
+  scroll, so the scroll-driven shape field stays in sync. Off under
+  reduced-motion.
+- **Cursor parallax** on the four shapes: each drifts on its own depth in
+  response to the pointer (desktop only), strongest while they're scattered,
+  calmer once they've lined up — layered on top of the existing idle rotation.
+
+**Performance note.** The decorative canvases render once and stop, so despite
+there being many of them, only a handful of animation loops actually run
+continuously (grain, the shape field, the ASCII cursor-follow, and Lenis). Colour
+stays disciplined: everything is paper/ash on void, with the ember accent used
+only as an occasional ornament touch.
