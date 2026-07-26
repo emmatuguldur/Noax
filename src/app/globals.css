@@ -108,7 +108,7 @@
 .hero {
   position: relative;
   min-height: 100svh;
-  /* Positioning + stacking context for the ambient layer beneath the content. */
+  /* Positioning + stacking context for the framing layer beneath the content. */
   isolation: isolate;
 }
 
@@ -121,29 +121,44 @@
   padding: 0 clamp(1rem, 5vw, 4rem) clamp(1.5rem, 4vh, 2.75rem);
 }
 
-/* Ambient decorative stipple shapes — behind content, drifting, non-interactive. */
-.ambient {
+/* Vertical divider rules flanking the hero — exhibition-hall "pillars".
+   Thin, gradient-faded top and bottom so they read as structure, not lines. */
+.hero-pillars {
   position: absolute;
   inset: 0;
   z-index: 0;
-  overflow: hidden;
   pointer-events: none;
 }
 
-.ambient-node {
+.pillar {
   position: absolute;
-  display: block;
-  opacity: 0.22;
-  will-change: transform;
-  animation: ambientDrift var(--dur, 22s) var(--delay, 0s) ease-in-out infinite alternate;
+  top: 12vh;
+  bottom: 12vh;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(255, 255, 255, 0.08) 22%,
+    rgba(255, 255, 255, 0.08) 78%,
+    transparent
+  );
 }
 
-@keyframes ambientDrift {
-  from {
-    transform: translate3d(-8px, 6px, 0) rotate(-5deg);
+.pillar-left {
+  left: clamp(1.5rem, 9vw, 7rem);
+}
+
+.pillar-right {
+  right: clamp(1.5rem, 9vw, 7rem);
+}
+
+@media (max-width: 640px) {
+  /* Too tight to flank content on a phone — pull them to the very edges, faint. */
+  .pillar-left {
+    left: 10px;
   }
-  to {
-    transform: translate3d(12px, -16px, 0) rotate(7deg);
+  .pillar-right {
+    right: 10px;
   }
 }
 
@@ -190,6 +205,17 @@
   /* Matches the product cutout framing (544 x 458). Deliberately large. */
   width: min(46rem, 88vw, 74vh);
   aspect-ratio: 544 / 458;
+  /* Arch-cut niche: gently arched top corners, a soft radial vignette behind
+     the piece, and a hairline border. `overflow` is left visible on purpose so
+     the border/background arch but the arrow and mouse-follow ASCII (children)
+     are never clipped — the background respects the radius on its own. */
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: clamp(48px, 11vw, 150px) clamp(48px, 11vw, 150px) 0 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(30, 30, 30, 0.4) 0%,
+    rgba(10, 10, 10, 0.9) 100%
+  );
 }
 
 .shirt-layer {
@@ -321,6 +347,33 @@
 
 .shirt-meta-sep { margin: 0 0.5rem; color: rgba(110, 108, 106, 0.5); }
 
+/* Bracketed accession tags on the metadata line. */
+.cat-tag {
+  white-space: nowrap;
+  color: var(--ash);
+}
+.cat-sep {
+  margin: 0 0.55rem;
+  color: rgba(110, 108, 106, 0.5);
+}
+
+/* Frieze — a thin repeating geometric micro-band above the pagination dots. */
+.frieze {
+  width: 132px;
+  height: 4px;
+  color: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .shirt-meta {
+    font-size: 9px;
+  }
+  .cat-sep {
+    margin: 0 0.35rem;
+  }
+}
+
 .pip-row { display: flex; align-items: center; gap: 0.5rem; }
 
 .pip {
@@ -342,11 +395,8 @@
    is the destination — there is no docked navbar.
 --------------------------------------------------------------------------- */
 .shape-spacer {
-  /* Scroll distance to reach and hold the assembled row; also hosts the
-     ambient decoration around the shape section. */
-  position: relative;
+  /* Pure scroll distance to reach and hold the assembled row. */
   height: 85vh;
-  overflow: hidden;
   pointer-events: none;
 }
 
@@ -640,64 +690,6 @@ html.lenis body {
 }
 
 /* ---------------------------------------------------------------------------
-   Ornament — hanging strings
---------------------------------------------------------------------------- */
-.ornaments {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.ornament-string {
-  position: absolute;
-  top: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  transform-origin: top center;
-  opacity: 0.5;
-  will-change: transform;
-  animation: stringSway var(--sway-dur, 8s) var(--sway-delay, 0s) ease-in-out infinite alternate;
-}
-
-.string-line {
-  flex: 1;
-  width: 1px;
-  background: linear-gradient(
-    to bottom,
-    rgba(237, 233, 226, 0.02),
-    rgba(237, 233, 226, 0.3)
-  );
-}
-
-.string-charm {
-  display: block;
-  margin-top: 2px;
-}
-
-@keyframes stringSway {
-  from {
-    transform: rotate(-2.4deg);
-  }
-  to {
-    transform: rotate(2.4deg);
-  }
-}
-
-/* ---------------------------------------------------------------------------
-   Ornament — tiled geometric divider
---------------------------------------------------------------------------- */
-.geo-divider {
-  width: 100%;
-  height: clamp(34px, 5vh, 52px);
-  color: rgba(237, 233, 226, 0.1);
-  overflow: hidden;
-  pointer-events: none;
-}
-
-/* ---------------------------------------------------------------------------
    Corner micro-typography (gallery placard)
 --------------------------------------------------------------------------- */
 .corner-marks {
@@ -744,6 +736,106 @@ html.lenis body {
   .corner {
     font-size: 8px;
     letter-spacing: 0.18em;
+  }
+}
+
+/* Dotted spec-sheet leaders under the label/value corner marks. */
+.corner-tr,
+.corner-bl {
+  border-bottom: 1px dotted rgba(255, 255, 255, 0.15);
+  padding-bottom: 3px;
+}
+
+/* Inline precision crosshair beside the coordinate text — matches the frame. */
+.mark-cross {
+  position: relative;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  vertical-align: -1px;
+  margin-right: 3px;
+}
+.mark-cross::before,
+.mark-cross::after {
+  content: "";
+  position: absolute;
+  background: rgba(255, 255, 255, 0.28);
+}
+.mark-cross::before {
+  left: 0;
+  top: 50%;
+  width: 8px;
+  height: 1px;
+  transform: translateY(-50%);
+}
+.mark-cross::after {
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 8px;
+  transform: translateX(-50%);
+}
+
+/* ---------------------------------------------------------------------------
+   Architectural framing — perimeter frame + corner crosshairs
+--------------------------------------------------------------------------- */
+.viewport-frame {
+  position: fixed;
+  inset: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  pointer-events: none;
+  z-index: 34;
+}
+
+.vf-cross {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+}
+.vf-cross::before,
+.vf-cross::after {
+  content: "";
+  position: absolute;
+  background: rgba(255, 255, 255, 0.2);
+}
+.vf-cross::before {
+  left: 0;
+  top: 50%;
+  width: 9px;
+  height: 1px;
+  transform: translateY(-50%);
+}
+.vf-cross::after {
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 9px;
+  transform: translateX(-50%);
+}
+.vf-cross-tl {
+  top: 0;
+  left: 0;
+  transform: translate(-50%, -50%);
+}
+.vf-cross-tr {
+  top: 0;
+  right: 0;
+  transform: translate(50%, -50%);
+}
+.vf-cross-bl {
+  bottom: 0;
+  left: 0;
+  transform: translate(-50%, 50%);
+}
+.vf-cross-br {
+  bottom: 0;
+  right: 0;
+  transform: translate(50%, 50%);
+}
+
+@media (max-width: 640px) {
+  .viewport-frame {
+    inset: 12px;
   }
 }
 

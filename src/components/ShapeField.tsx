@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 
-import AmbientField from "@/components/AmbientField";
 import NavShape from "@/components/NavShape";
 import { NAV_ITEMS } from "@/data/navItems";
 import { useIsCompact, usePrefersReducedMotion } from "@/lib/hooks";
@@ -152,11 +151,8 @@ export default function ShapeField() {
 
   return (
     <>
-      {/* Scroll distance to reach and hold the assembled row, plus some ambient
-          decoration around it. */}
-      <div className="shape-spacer" aria-hidden="true">
-        <AmbientField max={4} offset={4} />
-      </div>
+      {/* Scroll distance to reach and hold the assembled row. */}
+      <div className="shape-spacer" aria-hidden="true" />
 
       <nav ref={fieldRef} className="shape-field" aria-label="Explore">
         <p className="shape-field-eyebrow">Four ways in</p>

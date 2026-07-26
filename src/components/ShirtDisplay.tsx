@@ -167,14 +167,28 @@ export default function ShirtDisplay() {
         </button>
 
         <p className="shirt-meta">
-          <span className="text-paper">
-            CAT. {design.cat} — {design.study}
-          </span>
-          <span className="shirt-meta-sep">/</span>
-          {design.edition}
-          <span className="shirt-meta-sep">/</span>
-          {design.spec}
+          <span className="cat-tag">[ CATALOGUE NO. {design.cat} ]</span>
+          <span className="cat-sep" aria-hidden="true">—</span>
+          <span className="cat-tag">[ EDITION: {design.edition} ]</span>
+          <span className="cat-sep" aria-hidden="true">—</span>
+          <span className="cat-tag">[ MEDIUM: {design.medium} ]</span>
         </p>
+
+        <div className="frieze" aria-hidden="true">
+          <svg width="100%" height="100%" preserveAspectRatio="none">
+            <defs>
+              <pattern id="noax-frieze" width="10" height="4" patternUnits="userSpaceOnUse">
+                <path
+                  d="M5 0.4 L9 2 L5 3.6 L1 2 Z"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="0.5"
+                />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#noax-frieze)" />
+          </svg>
+        </div>
 
         <div className="pip-row" aria-hidden="true">
           {DESIGNS.map((item, i) => (
