@@ -220,3 +220,78 @@ whole-block mouse-follow is removed (this replaces it).
 
 Not in this round (as specified): the ASCII↔photo dissolve/pixel-sort transition,
 and custom cursor states.
+
+---
+
+## v8 — the arrival (the page finally speaks)
+
+The diagnosis this round started from: v2–v7 had accumulated eight decorative
+systems — perimeter frame, corner crosshairs, grain, pillars, frieze, pips,
+signature stroke, accession tags — arranged around a middle that had nothing in
+it. Every *signifier* of a serious gallery object, no object in the room. Three
+things were actually draining it, and each has a fix here.
+
+**1. It never spoke.** The entire copy on the homepage was "N.O.A.X", "View", a
+catalogue number and "Scroll". A label's soul is mostly voice, and this one
+recited its own accession number.
+
+- All hero copy now lives in **`src/data/copy.ts`** — **placeholder, written to
+  be overwritten**, same convention as NX-01 "Interference". The words are
+  derived from things already true in this repo (the water-based-ink line on
+  `/shop`, the editions of 100 in `designs.ts`) rather than an invented brand
+  personality. Keep the *shape* — short overline, a two-part statement that
+  lands in two breaths, a dry spec line as counterweight — and swap the words.
+- The statement is set in **Instrument Serif**, the only serif on the site.
+  Everything else is a grotesque or a monospace; after a page of machine type,
+  the one line where the label speaks gets the one face with a wrist in it.
+  (v4 loaded this face for a quote section, v5 removed both. The face was never
+  the problem.)
+
+**2. It hid its only real asset.** The shirt — the one photographed, tactile
+thing on the page — defaulted to ASCII, and you had to click "View" to reach the
+product. The cleverness was eating the content.
+
+- **The dissolve** (`AsciiRenderer`, the thing v7 deferred). On load the grid
+  types on, holds a beat, then melts — and the photograph was underneath it the
+  whole time. Cells don't vanish on a wipe: each has its own threshold weighted
+  by character density, so the faint ground releases first and the heavy strokes
+  that draw the print hold on longest. The image erodes down to its artwork
+  before that goes too. Seeded, so it melts identically on every reload.
+- The resting state is now **the photograph**. "View" is the way back, and it
+  retypes the grid. Forward replays the dissolve; back is immediate — a 1.3s
+  ceremony on every button press stops being cinema and becomes a wait.
+- Progress is written to a `--dissolve` CSS custom property from the rAF loop,
+  never to React state. One number drives the photo's opacity, its settling
+  scale, and the bloom, at 60fps with zero re-renders.
+
+**3. The accent was banned.** `ember` existed but was reserved for interactive
+states, so the page was grey-on-black with no focal point anywhere.
+
+- **`.shirt-bloom`** — the light the garment arrives into, dim while the page is
+  still "reading" the shirt as characters and full once the cloth is really
+  there. A warm ember core under a paper halo: the accent as atmosphere.
+- The statement's payoff word is ember, and it clears 4.8:1 on the void, so it
+  carries real text rather than decoration. New body copy uses a new
+  `--paper-dim` token (6.6:1) — `--ash` is only 3.9:1 and is now left to the
+  pre-existing micro-type.
+
+**Choreography.** Copy is staged against the shirt's arrival (`--t-*` and the
+`.stage-N` classes in `globals.css`, mirroring the intro clock in
+`ShirtDisplay`) so the words read as the caption to something that just
+happened, not as a page assembling itself. Elements are **visible by default**
+and only animate under `prefers-reduced-motion: no-preference` — reduced-motion
+visitors get the finished page immediately, never a blank one. Any click, key,
+or scroll lands the intro instantly, and a 5.2s ceiling settles it regardless in
+case the grid never builds (the sampler waits on image decode *and*
+`document.fonts.ready`, so a slow load could otherwise leave the stage empty).
+
+**Layout note.** The statement costs ~14vh the hero wasn't spending, so the
+shirt's viewport cap came down (74vh → 62vh, and 54vh under 780px tall). Worth
+an eye: on very short viewports the hero can still grow past the fold, and
+because `ShapeField` reads `scrollY / vh` directly, a taller hero starts the
+shapes converging slightly earlier.
+
+**Still unverified in a browser** — built without one here again. Sanity-check
+the dissolve's feel (`DISSOLVE_MS`, `DISSOLVE_FADE`, `DISSOLVE_LIFT` in
+`AsciiRenderer`), the bloom's strength, and whether the statement's two beats
+land at the right moment against the melt.

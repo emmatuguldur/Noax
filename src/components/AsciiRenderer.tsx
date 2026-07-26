@@ -16,12 +16,39 @@ interface AsciiRendererProps {
   active: boolean;
   cols?: number;
   className?: string;
+  /** Duration of the type-on stagger. The intro slows this down for the reveal. */
+  revealMs?: number;
+  /**
+   * Flip to true to melt the grid away and hand the stage to the photograph
+   * beneath. Flipping back to false restores it instantly.
+   */
+  dissolving?: boolean;
+  /**
+   * Called every frame of the dissolve with 0..1. Write to the DOM here — this
+   * fires ~60×/s, so anything that triggers a React render will melt down.
+   */
+  onDissolveProgress?: (progress: number) => void;
+  /** Fired once, when the last character has gone. */
+  onDissolveEnd?: () => void;
 }
 
 /** Grids are expensive to build and never change, so keep them for the session. */
 const gridCache = new Map<string, AsciiGrid>();
 
 const REVEAL_MS = 420;
+
+/* ---- Dissolve --------------------------------------------------------------
+   The brand thesis as one gesture: the machine reading of the garment lets go
+   and the real cloth is underneath it the whole time.
+
+   Cells don't vanish on a wipe — each one has its own threshold, ordered by
+   how dense its character is. The dim, sparse cells (empty ground, soft
+   shadow) release first; the heavy strokes that actually draw the print hold
+   on longest, so the image "erodes" down to its artwork before that too goes.
+   A little upward lift on the way out keeps it from reading as a crossfade. */
+const DISSOLVE_FADE = 0.22; // width of a single cell's fade, in progress units
+const DISSOLVE_LIFT = 14; // px a character drifts up as it leaves
+const DISSOLVE_MS = 1300;
 
 /* ---- Spring-damper + cursor repulsion, tuned by feel -----------------------
    Each cell is a tiny 2D spring: a restoring force pulls its character back to
@@ -41,11 +68,25 @@ export default function AsciiRenderer({
   active,
   cols = 104,
   className,
+  revealMs = REVEAL_MS,
+  dissolving = false,
+  onDissolveProgress,
+  onDissolveEnd,
 }: AsciiRendererProps) {
   const boxRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [grid, setGrid] = useState<AsciiGrid | null>(null);
   const reduceMotion = usePrefersReducedMotion();
+
+  // Callbacks live in refs so a new function identity from the parent never
+  // tears down the render loop (which would reset every spring mid-flight).
+  const progressRef = useRef(onDissolveProgress);
+  progressRef.current = onDissolveProgress;
+  const endRef = useRef(onDissolveEnd);
+  endRef.current = onDissolveEnd;
+
+  /** Handle onto the live loop, so `dissolving` can drive it without a remount. */
+  const controlRef = useRef<{ start: () => void; reset: () => void } | null>(null);
 
   // Build the character grid once per source image.
   useEffect(() => {
@@ -109,6 +150,22 @@ export default function AsciiRenderer({
     const glyphOf = new Uint8Array(n);
     for (let i = 0; i < n; i += 1) glyphOf[i] = rampIndex[chars[i]] ?? 0;
 
+    // Per-cell dissolve threshold, weighted by character density so the print
+    // outlasts the ground. Seeded, not Math.random — a reload should melt the
+    // same way twice.
+    const dissolveAt = new Float32Array(n);
+    const lastRamp = ASCII_RAMP.length - 1;
+    let dSeed = 0x9e3779b9;
+    const dRand = () => {
+      dSeed = (dSeed * 1664525 + 1013904223) >>> 0;
+      return dSeed / 4294967296;
+    };
+    for (let i = 0; i < n; i += 1) {
+      const density = glyphOf[i] / lastRamp; // 0 = faintest, 1 = heaviest
+      // Scaled so the very last cell finishes its fade exactly at progress 1.
+      dissolveAt[i] = (0.58 * density + 0.42 * dRand()) * (1 - DISSOLVE_FADE);
+    }
+
     // Per-cell physics state (plain number arrays — no engine).
     const offX = new Float32Array(n);
     const offY = new Float32Array(n);
@@ -154,16 +211,39 @@ export default function AsciiRenderer({
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // Tracked so globalAlpha is only assigned for cells actually mid-fade;
+      // the overwhelming majority are exactly 1 and cost nothing.
+      let alpha = 1;
+      ctx.globalAlpha = 1;
+
       for (let i = 0; i < n; i += 1) {
         const g = glyphOf[i];
         if (g === 0) continue; // space
         if (delays[i] > reveal) continue; // type-on stagger
+
+        let cellAlpha = 1;
+        let lift = 0;
+        if (dissolve > 0) {
+          const t = (dissolve - dissolveAt[i]) / DISSOLVE_FADE;
+          if (t >= 1) continue; // gone
+          if (t > 0) {
+            cellAlpha = 1 - t;
+            lift = -t * t * DISSOLVE_LIFT; // eases away rather than sliding
+          }
+        }
+        if (cellAlpha !== alpha) {
+          ctx.globalAlpha = cellAlpha;
+          alpha = cellAlpha;
+        }
+
         const col = i % C;
         const row = (i - col) / C;
         const x = (col * cellW + offX[i]) * dpr;
-        const y = (row * cellH + offY[i]) * dpr;
+        const y = (row * cellH + offY[i] + lift) * dpr;
         ctx.drawImage(atlas, g * aCellW, 0, aCellW, aCellH, x, y, aCellW, aCellH);
       }
+
+      ctx.globalAlpha = 1;
     };
 
     const resize = () => {
@@ -195,6 +275,8 @@ export default function AsciiRenderer({
       window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
     let reveal = reduceMotion ? 1 : 0;
+    let dissolve = 0;
+    let melting = false;
     let running = false;
     let frame = 0;
     let last = 0;
@@ -203,9 +285,20 @@ export default function AsciiRenderer({
       const dt = last ? Math.min(0.033, (now - last) / 1000) : 0.016;
       last = now;
 
-      if (reveal < 1) reveal = Math.min(1, reveal + (dt * 1000) / REVEAL_MS);
+      if (reveal < 1) reveal = Math.min(1, reveal + (dt * 1000) / revealMs);
 
-      const pushing = hovering && hoverCapable;
+      if (melting && dissolve < 1) {
+        dissolve = Math.min(1, dissolve + (dt * 1000) / DISSOLVE_MS);
+        progressRef.current?.(dissolve);
+        if (dissolve >= 1) {
+          melting = false;
+          endRef.current?.();
+        }
+      }
+
+      // Springs stand down while the grid is letting go — the cursor fighting
+      // the dissolve reads as noise, not interaction.
+      const pushing = hovering && hoverCapable && dissolve === 0;
 
       // Wake cells inside the cursor's falloff so they start simulating.
       if (pushing) {
@@ -266,7 +359,7 @@ export default function AsciiRenderer({
 
       draw();
 
-      if (reveal < 1 || activeCells.size > 0) {
+      if (reveal < 1 || activeCells.size > 0 || melting) {
         frame = requestAnimationFrame(step);
       } else {
         running = false;
@@ -278,6 +371,25 @@ export default function AsciiRenderer({
       running = true;
       last = 0;
       frame = requestAnimationFrame(step);
+    };
+
+    // Driven by the `dissolving` prop through a ref, so toggling it never
+    // remounts this loop.
+    controlRef.current = {
+      start: () => {
+        if (melting || dissolve >= 1) return;
+        // Any unfinished type-on is abandoned; the grid is leaving anyway.
+        reveal = 1;
+        melting = true;
+        wake();
+      },
+      reset: () => {
+        if (dissolve === 0 && !melting) return;
+        melting = false;
+        dissolve = 0;
+        progressRef.current?.(0);
+        draw();
+      },
     };
 
     // Window-level pointer tracking, resolved against the canvas each move so it
@@ -319,8 +431,16 @@ export default function AsciiRenderer({
       window.removeEventListener("pointermove", onPointerMove);
       document.removeEventListener("pointerleave", onPointerLeaveWindow);
       observer?.disconnect();
+      controlRef.current = null;
     };
-  }, [grid, active, reduceMotion]);
+  }, [grid, active, reduceMotion, revealMs]);
+
+  // `grid`/`active` are in the deps so the command re-applies after the loop
+  // above rebuilds and installs a fresh controlRef.
+  useEffect(() => {
+    if (dissolving) controlRef.current?.start();
+    else controlRef.current?.reset();
+  }, [dissolving, grid, active]);
 
   return (
     <div
