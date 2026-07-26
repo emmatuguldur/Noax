@@ -1,20 +1,19 @@
-import AmbientField from "@/components/AmbientField";
 import BrandMark from "@/components/BrandMark";
-import OrnamentStrings from "@/components/OrnamentStrings";
 import ShirtDisplay from "@/components/ShirtDisplay";
 import SignatureLine from "@/components/SignatureLine";
 
 /**
- * The homepage hero: the faded brand mark as a masthead, the shirt as the
- * dominant piece of content, and — filling the wide side margins that used to
- * read as empty — hanging ornament strings and drifting stipple shapes. All of
- * that decoration sits behind the content layer.
+ * The homepage hero: the faded brand mark as a masthead and the shirt as the
+ * dominant piece of content. Two faint vertical rules flank the content like
+ * exhibition-hall pillars — structural framing rather than decoration.
  */
 export default function Hero() {
   return (
     <section className="hero" aria-label="N.O.A.X">
-      <OrnamentStrings max={4} />
-      <AmbientField max={6} />
+      <div className="hero-pillars" aria-hidden="true">
+        <span className="pillar pillar-left" />
+        <span className="pillar pillar-right" />
+      </div>
 
       <div className="hero-content">
         <BrandMark />

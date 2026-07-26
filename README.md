@@ -153,3 +153,38 @@ there being many of them, only a handful of animation loops actually run
 continuously (grain, the shape field, the ASCII cursor-follow, and Lenis). Colour
 stays disciplined: everything is paper/ash on void, with the ember accent used
 only as an occasional ornament touch.
+
+---
+
+## v6 — architectural framing (ornament approach reverted)
+
+Last round's decorative ornament — the hanging strings and the extra scattered
+stipple shapes — is removed entirely (components, assets, and styles). The four
+nav shapes, the grain, the flower, and the corner micro-type are untouched. In
+place of "more objects," this round adds quiet structural framing, in the spirit
+of a gallery floor plan / archival blueprint:
+
+- **Perimeter frame** (`ViewportFrame`) — a hairline border inset ~22px from the
+  viewport edge, with a small **precision crosshair** at each corner. Fixed,
+  non-interactive.
+- **Coordinate crosshair** — a matching crosshair sits beside the top-right
+  coordinate in the corner type.
+- **Vertical pillars** — two faint gradient-faded vertical rules flank the hero
+  content like exhibition-hall columns.
+- **Bracketed accession tags** — the shirt metadata is now
+  `[ CATALOGUE NO. 01 ] — [ EDITION: 1/100 ] — [ MEDIUM: ORGANIC COTTON / 380 GSM ]`,
+  the real data shape going forward.
+- **Dotted leaders** — the coordinate and material-spec corner marks gain a fine
+  dotted underline, spec-sheet style.
+- **Frieze band** — a thin (~4px) repeating diamond micro-pattern sits just above
+  the pagination dots.
+- **Arch-cut hero vignette** — the shirt display container gets gently arched top
+  corners, a soft radial niche behind the piece, and a hairline border. This is
+  the one change to an existing container's shape; `overflow` is intentionally
+  left visible so the border and background arch while the arrow and mouse-follow
+  ASCII are never clipped. It's the single item to roll back if it clashes with
+  the shirt/ASCII.
+
+Everything is CSS/markup and monochrome (hairlines are low-opacity white); no new
+rendering and no new colour. The stipple renderer (`ParticleCanvas`) is now unused
+but left in place.
