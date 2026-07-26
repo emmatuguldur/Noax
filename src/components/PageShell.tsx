@@ -6,6 +6,13 @@ interface PageShellProps {
   eyebrow: string;
   title: string;
   children: React.ReactNode;
+  /**
+   * Optional full-bleed region, rendered after the prose column and allowed to
+   * escape its 36rem measure. It hangs off `.page-main` rather than
+   * `.page-body` because only `.page-main` is centred in the viewport — the
+   * `50% - 50vw` breakout is wrong from anywhere else.
+   */
+  bleed?: React.ReactNode;
 }
 
 /**
@@ -13,7 +20,7 @@ interface PageShellProps {
  * navbar by design; the sub-pages get a light one so you are never stranded —
  * the wordmark returns home and the other three pages are one hop away.
  */
-export default function PageShell({ eyebrow, title, children }: PageShellProps) {
+export default function PageShell({ eyebrow, title, children, bleed }: PageShellProps) {
   return (
     <div className="page">
       <header className="page-head">
@@ -33,6 +40,7 @@ export default function PageShell({ eyebrow, title, children }: PageShellProps) 
         <p className="page-eyebrow">{eyebrow}</p>
         <h1 className="page-title">{title}</h1>
         <div className="page-body">{children}</div>
+        {bleed ? <div className="page-bleed">{bleed}</div> : null}
       </main>
 
       <footer className="page-foot">

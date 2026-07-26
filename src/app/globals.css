@@ -16,6 +16,18 @@
   --paper: #ede9e2;
   --ash: #6e6c6a;
   --ember: #c9601a;
+
+  /* Dimmed paper that still clears 4.5:1 on the void. `--ash` is 3.9:1 and is
+     kept only for the pre-existing micro-type; new copy uses this. */
+  --paper-dim: rgba(237, 233, 226, 0.62);
+
+  /* --- Hero choreography ---------------------------------------------------
+     Mirrors the intro clock in `ShirtDisplay` (INTRO_TYPE_MS 900 + hold 520,
+     then the renderer's DISSOLVE_MS 1300 — the grid has fully let go at
+     ~2720ms). Copy is staged against that so the words read as the caption to
+     the shirt's arrival. Change the constants there and change these. */
+  --t-dur: 900ms;
+  --t-ease: cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 
 @layer base {
@@ -40,6 +52,62 @@
     outline: 1px solid var(--paper);
     outline-offset: 3px;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   Staged entrance
+
+   One shared animation, per-element delays. Elements are *visible by default*
+   and only animate where motion is welcome — so reduced-motion users, and
+   anyone whose CSS loads without the animation applying, get the finished page
+   rather than a blank one. `backwards` holds the from-state during the delay.
+--------------------------------------------------------------------------- */
+@keyframes stageIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes stageInSoft {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+    filter: blur(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .stage {
+    animation: stageIn var(--t-dur) var(--t-ease) backwards;
+  }
+
+  /* Masthead settles first, while the grid is still typing itself on. */
+  .brand-word {
+    animation: stageIn var(--t-dur) var(--t-ease) 420ms backwards;
+  }
+
+  .stage-1 { animation-delay: 200ms; }
+  /* 1500ms — the statement opens as the grid begins to let go. */
+  .stage-3 {
+    animation: stageInSoft 1100ms var(--t-ease) 1500ms backwards;
+  }
+  /* 2200ms — the turn lands mid-dissolve. This is the beat the page is built
+     around; everything else is timed so this one is not crowded. */
+  .stage-4 {
+    animation: stageInSoft 1100ms var(--t-ease) 2200ms backwards;
+  }
+  .stage-5 { animation-delay: 2850ms; }
+  .stage-6 { animation-delay: 3150ms; }
 }
 
 /* ---------------------------------------------------------------------------
@@ -162,12 +230,115 @@
   }
 }
 
+.hero-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hero-overline {
+  margin: 0;
+  padding-top: clamp(2.5rem, 6vh, 4rem);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+  text-align: center;
+  /* Optical centring — the trailing letter-space would otherwise push it left. */
+  margin-right: -0.42em;
+}
+
+/* The brand mark carries its own top padding for the flower watermark; the
+   overline now occupies that space, so pull it back up under it. */
+.hero-head .brand-mark {
+  padding-top: clamp(1rem, 2.5vh, 1.75rem);
+}
+
 .hero-stage {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(1rem, 3vh, 2.5rem) 0;
+  padding: clamp(0.5rem, 2vh, 1.75rem) 0;
+}
+
+/* ---------------------------------------------------------------------------
+   The statement — the one place the label speaks
+
+   Set in the serif, because every other face on the site is a grotesque or a
+   monospace. The contrast is the point: after a page of machine type, one line
+   with a wrist in it.
+--------------------------------------------------------------------------- */
+.hero-say {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.75rem, 2vh, 1.25rem);
+  padding: clamp(0.75rem, 3vh, 2rem) 0 clamp(0.5rem, 2vh, 1.25rem);
+  text-align: center;
+}
+
+.hero-statement {
+  margin: 0;
+  max-width: 24ch;
+  font-family: var(--font-serif), Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(1.5rem, 4.2vw, 3rem);
+  line-height: 1.16;
+  letter-spacing: -0.005em;
+  color: var(--paper);
+  text-wrap: balance;
+}
+
+/* The payoff, and the only warm thing on the page. Ember clears 4.8:1 on the
+   void, so it carries real text rather than decoration. */
+.hero-turn {
+  color: var(--ember);
+  font-style: italic;
+}
+
+/* Each half animates as a block, so they need to be block-level to transform —
+   but must still flow as one sentence and wrap together. */
+.hero-statement .stage {
+  display: inline-block;
+}
+
+.hero-spec {
+  margin: 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+  margin-right: -0.2em;
+}
+
+@media (max-width: 640px) {
+  .hero-spec {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    max-width: 30ch;
+    line-height: 1.7;
+  }
+}
+
+/* The statement costs ~14vh that the hero did not previously spend. On a short
+   laptop screen that is the difference between the scroll hint being visible
+   and not, so give the shirt and the type back some room rather than letting
+   the hero quietly grow past the fold. */
+@media (max-height: 780px) {
+  .shirt-stage {
+    width: min(46rem, 88vw, 54vh);
+  }
+
+  .hero-statement {
+    font-size: clamp(1.25rem, 3.4vw, 2.1rem);
+  }
+
+  .hero-overline {
+    padding-top: clamp(1.5rem, 4vh, 2.5rem);
+  }
 }
 
 .hero-foot {
@@ -202,8 +373,10 @@
 
 .shirt-stage {
   position: relative;
-  /* Matches the product cutout framing (544 x 458). Deliberately large. */
-  width: min(46rem, 88vw, 74vh);
+  /* Matches the product cutout framing (544 x 458). Deliberately large — but
+     the vh cap came down from 74 to 62 in v8 to make room for the statement
+     without the hero overflowing on short laptop screens. */
+  width: min(46rem, 88vw, 62vh);
   aspect-ratio: 544 / 458;
   /* Arch-cut niche: gently arched top corners, a soft radial vignette behind
      the piece, and a hairline border. `overflow` is left visible on purpose so
@@ -218,9 +391,33 @@
   );
 }
 
+/* The light the garment arrives into. Opacity is driven from JS by the
+   dissolve progress, so the niche lifts as the cloth resolves — dim while the
+   page is still "reading" the shirt as characters, lit once it's really there.
+   Two stacked ellipses: a warm ember core (finally letting the accent breathe,
+   as atmosphere rather than as UI) under a cooler paper halo. */
+.shirt-bloom {
+  position: absolute;
+  inset: -14% -10%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 42% 48% at 50% 46%, rgba(201, 96, 26, 0.13), transparent 70%),
+    radial-gradient(ellipse 56% 60% at 50% 48%, rgba(237, 233, 226, 0.085), transparent 72%);
+  filter: blur(26px);
+  transition: opacity 700ms var(--t-ease);
+}
+
+/* During the dissolve the rAF loop writes --dissolve every frame; a transition
+   on top of that would smear a frame behind. */
+.shirt-stage[data-dissolving] .shirt-bloom {
+  transition: none;
+}
+
 .shirt-layer {
   position: absolute;
   inset: 0;
+  z-index: 1;
 }
 
 .shirt-photo {
@@ -265,6 +462,7 @@
 /* Simple arrow control, parked at the far right of the display area. */
 .arrow-next {
   position: absolute;
+  z-index: 2; /* above the bloom and the shirt layers */
   right: clamp(-2.75rem, -4vw, -1rem);
   top: 50%;
   transform: translateY(-50%);
@@ -642,6 +840,256 @@
   font-size: 0.875rem;
   line-height: 1.6;
   color: rgba(237, 233, 226, 0.5);
+}
+
+/* ---------------------------------------------------------------------------
+   Shop — RIOT
+
+   The catalogue thrown across the table, then filed back. Every scatter value
+   is a custom property set inline per card by ShopChaos; `.riot-on` is the only
+   thing that switches them on, so one class toggle animates the whole field
+   through a single transition. ORDER is the same markup with the variables
+   zeroed — the archival grid is the resting state, not a separate component.
+
+   Palette discipline holds: void, paper, one ember. The chaos is in the
+   geometry, never in the colour.
+--------------------------------------------------------------------------- */
+/* Escapes the 52rem measure. `.page-main` is centred (margin: 0 auto, symmetric
+   padding), so its content box shares the viewport's centre line and
+   `50% - 50vw` lands exactly on the left edge. Anchoring this to `.page-body`
+   instead would push it off-centre by half that column's width. */
+.page-bleed {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+}
+
+.riot {
+  position: relative;
+  margin-top: clamp(2.5rem, 6vh, 4rem);
+  padding: 0 clamp(1rem, 5vw, 4rem);
+}
+
+.riot-bar {
+  display: flex;
+  align-items: baseline;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.riot-toggle {
+  /* 44px min target — this is the only control in the section. */
+  min-height: 44px;
+  padding: 0.5rem 1.6rem;
+  background: transparent;
+  border: 1px solid rgba(237, 233, 226, 0.24);
+  color: var(--paper);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 220ms ease, color 220ms ease, background 220ms ease;
+}
+
+.riot-toggle:hover {
+  color: var(--ember);
+  border-color: var(--ember);
+}
+
+.riot-hint {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+/* --- Ticker ------------------------------------------------------------- */
+.riot-ticker {
+  overflow: hidden;
+  border-top: 1px solid rgba(237, 233, 226, 0.08);
+  border-bottom: 1px solid rgba(237, 233, 226, 0.08);
+  padding: 0.55rem 0;
+  margin: 0 calc(-1 * clamp(1rem, 5vw, 4rem));
+}
+
+.riot-ticker-track {
+  display: flex;
+  width: max-content;
+  gap: 2.5rem;
+  animation: riot-scroll 42s linear infinite;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ash);
+  white-space: nowrap;
+}
+
+.riot-ticker-rev .riot-ticker-track { animation-direction: reverse; }
+
+/* Only the riot state runs the ticker; ORDER holds it still. */
+.riot:not(.riot-on) .riot-ticker-track { animation-play-state: paused; }
+
+@keyframes riot-scroll {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(calc(-50% - 1.25rem), 0, 0); }
+}
+
+/* --- The field ---------------------------------------------------------- */
+.riot-field {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: clamp(2rem, 5vw, 3.5rem);
+  padding: clamp(2.5rem, 7vh, 5rem) 0;
+}
+
+@media (min-width: 640px) {
+  .riot-field { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1024px) {
+  .riot-field { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+.riot-slot {
+  /* Perspective lives here so the plate inside gets real depth; the plate
+     itself must not own it, or the tilt flattens. */
+  perspective: 1100px;
+  transform: translate3d(var(--dx, 0), var(--dy, 0), 0) rotate(var(--rot, 0deg))
+    scale(var(--scale, 1));
+  transition: transform 720ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ORDER: every card back on the grid line. */
+.riot:not(.riot-on) .riot-slot {
+  --dx: 0%;
+  --dy: 0%;
+  --rot: 0deg;
+  --scale: 1;
+  --lift: 0px;
+  --tape-rot: 0deg;
+  --tag-rot: 0deg;
+}
+
+.riot-plate {
+  position: relative;
+  transform-style: preserve-3d;
+  transform: translateZ(var(--lift, 0px));
+  transition: transform 720ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.riot-shirt {
+  position: relative;
+  aspect-ratio: 544 / 458;
+  display: grid;
+  place-items: center;
+  background: var(--void);
+  border: 1px solid rgba(237, 233, 226, 0.1);
+  transform: translateZ(0);
+}
+
+.riot-shirt img { width: 100%; height: 100%; object-fit: contain; }
+
+/* The echo sits behind the shirt in Z. Tilting separates them, which is the
+   whole 3D read — a parallax gap you can see, not a drop shadow. */
+.riot-echo {
+  position: absolute;
+  inset: 0;
+  transform: translateZ(-70px) scale(1.06);
+  filter: blur(9px) saturate(0);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.riot-echo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* Ember, only as light thrown behind the garment. */
+  filter: brightness(0.5) sepia(1) hue-rotate(-18deg) saturate(3.2);
+}
+
+.riot-sheen {
+  position: absolute;
+  inset: 0;
+  transform: translateZ(2px);
+  background: linear-gradient(
+    115deg,
+    transparent 32%,
+    rgba(237, 233, 226, 0.07) 48%,
+    transparent 64%
+  );
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.riot-tape {
+  position: absolute;
+  top: -0.7rem;
+  left: 1.4rem;
+  transform: translateZ(52px) rotate(var(--tape-rot, 0deg));
+  padding: 0.25rem 0.9rem;
+  background: var(--ember);
+  color: var(--void);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  transition: transform 720ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.riot-tag {
+  position: absolute;
+  left: 0.9rem;
+  bottom: -1.15rem;
+  transform: translateZ(64px) rotate(var(--tag-rot, 0deg));
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.6rem 0.9rem;
+  background: var(--slate);
+  border: 1px solid rgba(237, 233, 226, 0.14);
+  transition: transform 720ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.riot-cat,
+.riot-ed {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+.riot-name {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  /* 0.62 alpha on --void clears 4.5:1; the meta rows above/below are
+     supporting micro-type, not body copy. */
+  color: var(--paper);
+}
+
+.riot-blurb {
+  margin-top: 2.4rem;
+  max-width: 26ch;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: rgba(237, 233, 226, 0.55);
+}
+
+/* --- Reduced motion ------------------------------------------------------
+   Keep the collage — it is layout, not animation — but stop everything that
+   moves: no ticker, no eased re-flow, and ShopChaos never builds the tilt. */
+@media (prefers-reduced-motion: reduce) {
+  .riot-ticker-track { animation: none; }
+  .riot-slot,
+  .riot-plate,
+  .riot-tape,
+  .riot-tag { transition: none; }
 }
 
 /* ---------------------------------------------------------------------------
