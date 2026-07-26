@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
+import AmbientField from "@/components/AmbientField";
 import NavShape from "@/components/NavShape";
 import { NAV_ITEMS } from "@/data/navItems";
 import { useIsCompact, usePrefersReducedMotion } from "@/lib/hooks";
@@ -10,18 +11,21 @@ import { useIsCompact, usePrefersReducedMotion } from "@/lib/hooks";
  * The four shapes as a fixed overlay, driven directly by scroll position.
  *
  * On load they sit scattered around the shirt at their loose hero anchors. As
- * you scroll they converge — smoothly, tied to scroll, not a hard cut — into a
- * centered, evenly-spaced row ("Four ways in"), labels fading in as they line
- * up. That row is the destination. Then, as you keep scrolling toward the quote
- * section, the whole assembled row lifts and fades away so it doesn't sit on top
- * of the content below (emergence-style: assemble, then move past).
+ * you scroll they converge — smoothly, tied to scroll — into a centered,
+ * evenly-spaced row ("Four ways in"), labels fading in as they line up, and
+ * rest there as the destination.
  *
- * Progress is read straight from window.scrollY / viewport height, so the whole
- * thing is deterministic — no ScrollTrigger. One rAF loop writes every
- * transform and composes the idle float into it.
+ * On desktop the shapes also drift on independent depths in response to the
+ * cursor (a small parallax), layered on top of the idle rotation — strongest
+ * while they're scattered, calmer once they've lined up.
+ *
+ * Progress is read straight from window.scrollY / viewport height (Lenis keeps
+ * that accurate), so it's deterministic. One rAF loop writes every transform.
  */
 const DESKTOP = { size: 118, rowScale: 0.9, rowGap: 224, rowY: 0.5 };
 const COMPACT = { size: 58, rowScale: 0.92, rowGapFrac: 0.2, rowY: 0.5 };
+const PARALLAX = 26; // px peak cursor-driven drift
+const DEPTHS = [1.15, 0.7, 1.35, 0.85]; // per-shape depth, aligned to NAV_ITEMS
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
@@ -43,6 +47,20 @@ export default function ShapeField() {
   const reduceRef = useRef(reduceMotion);
   reduceRef.current = reduceMotion;
 
+  const cursor = useRef({ x: 0.5, y: 0.5 });
+  const cursorSmooth = useRef({ x: 0.5, y: 0.5 });
+
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      cursor.current = {
+        x: e.clientX / (window.innerWidth || 1),
+        y: e.clientY / (window.innerHeight || 1),
+      };
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    return () => window.removeEventListener("pointermove", onMove);
+  }, []);
+
   useEffect(() => {
     let frame = 0;
     const view = { w: window.innerWidth, h: window.innerHeight };
@@ -59,20 +77,28 @@ export default function ShapeField() {
       const m = isCompact ? COMPACT : DESKTOP;
       const vh = view.h || 1;
 
-      // Scroll progress in viewport units. Reduced motion parks on the row.
       const P = window.scrollY / vh;
       const converge = still ? 1 : smoothstep(0, 0.7, P);
-      const depart = still ? 0 : smoothstep(1.02, 1.6, P);
-
       const t = now / 1000;
       const gap = isCompact ? view.w * COMPACT.rowGapFrac : DESKTOP.rowGap;
       const rowY = vh * m.rowY;
-      const departRise = depart * vh * 0.5;
+
+      // Cursor parallax (desktop only), eased toward the pointer.
+      const parallaxOn = !isCompact && !still;
+      const cs = cursorSmooth.current;
+      if (parallaxOn) {
+        cs.x += (cursor.current.x - cs.x) * 0.06;
+        cs.y += (cursor.current.y - cs.y) * 0.06;
+      } else {
+        cs.x = 0.5;
+        cs.y = 0.5;
+      }
+      const px = (cs.x - 0.5) * 2;
+      const py = (cs.y - 0.5) * 2;
+      const parallaxScale = 1 - converge * 0.65; // strongest while scattered
 
       if (fieldRef.current) {
-        fieldRef.current.style.opacity = String(1 - depart);
-        fieldRef.current.style.transform = `translateY(${-departRise}px)`;
-        fieldRef.current.style.setProperty("--assembled", String(converge * (1 - depart)));
+        fieldRef.current.style.setProperty("--assembled", String(converge));
       }
 
       for (let i = 0; i < NAV_ITEMS.length; i += 1) {
@@ -86,17 +112,20 @@ export default function ShapeField() {
         const heroY = vh * anchor.y;
         const rowX = view.w / 2 + (item.rowOrder - (NAV_ITEMS.length - 1) / 2) * gap;
 
-        // Idle motion lives in the scattered state and settles out on the row.
         const floatAmt = still ? 0 : 1 - converge;
         const bob = Math.sin(t * item.speed * 2 + item.phase) * 9 * floatAmt;
         const sway = Math.cos(t * item.speed * 1.4 + item.phase) * 6 * floatAmt;
 
-        const x = lerp(heroX + sway, rowX, converge);
-        const y = lerp(heroY + bob, rowY, converge);
+        const depth = DEPTHS[i % DEPTHS.length];
+        const parX = px * PARALLAX * depth * parallaxScale;
+        const parY = py * PARALLAX * depth * parallaxScale;
+
+        const x = lerp(heroX + sway, rowX, converge) + parX;
+        const y = lerp(heroY + bob, rowY, converge) + parY;
         const scale = lerp(1, m.rowScale, converge);
 
         shell.style.transform = `translate3d(${x - m.size / 2}px, ${y - m.size / 2}px, 0) scale(${scale})`;
-        shell.style.setProperty("--lo", String(converge * (1 - depart)));
+        shell.style.setProperty("--lo", String(converge));
 
         if (plate) {
           if (still) {
@@ -123,8 +152,11 @@ export default function ShapeField() {
 
   return (
     <>
-      {/* Scroll distance for the hold + depart, before the quote section. */}
-      <div className="shape-spacer" aria-hidden="true" />
+      {/* Scroll distance to reach and hold the assembled row, plus some ambient
+          decoration around it. */}
+      <div className="shape-spacer" aria-hidden="true">
+        <AmbientField max={4} offset={4} />
+      </div>
 
       <nav ref={fieldRef} className="shape-field" aria-label="Explore">
         <p className="shape-field-eyebrow">Four ways in</p>

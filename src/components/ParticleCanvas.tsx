@@ -17,6 +17,10 @@ interface ParticleCanvasProps {
   travel?: number;
   /** Soft halo behind the silhouette. */
   glow?: boolean;
+  /** Render the settled stipple once and stop — no perpetual rAF. For the many
+   *  small decorative instances, positional drift is done in CSS instead, so
+   *  they don't each hold a live animation loop. */
+  still?: boolean;
 }
 
 const noise2D = createNoise2D(9161);
@@ -35,6 +39,7 @@ export default function ParticleCanvas({
   options,
   travel = 1.2,
   glow = true,
+  still = false,
 }: ParticleCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const reduceMotion = usePrefersReducedMotion();
@@ -93,7 +98,7 @@ export default function ParticleCanvas({
         let x = dot.sx + (dot.tx - dot.sx) * ease;
         let y = dot.sy + (dot.ty - dot.sy) * ease;
 
-        if (!reduceMotion) {
+        if (!reduceMotion && !still) {
           const flow = elapsed * 0.06;
           x += noise2D(dot.nx + flow, dot.ny) * driftAmp * ease;
           y += noise2D(dot.nx, dot.ny + flow) * driftAmp * ease;
@@ -127,7 +132,7 @@ export default function ParticleCanvas({
     const start = () => {
       if (running || disposed || dots.length === 0) return;
       running = true;
-      if (reduceMotion) {
+      if (reduceMotion || still) {
         // Skip the assemble and the drift entirely: paint the settled mark.
         paint(travel + 1);
         return;
@@ -146,7 +151,7 @@ export default function ParticleCanvas({
 
     const onVisibility = () => {
       if (document.hidden) stop();
-      else if (running && !reduceMotion && !frame) frame = requestAnimationFrame(tick);
+      else if (running && !reduceMotion && !still && !frame) frame = requestAnimationFrame(tick);
     };
 
     image.onload = () => {
@@ -189,7 +194,7 @@ export default function ParticleCanvas({
     // `options` is a literal at every call site; the primitives below are the
     // real inputs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [src, width, height, travel, glow, reduceMotion]);
+  }, [src, width, height, travel, glow, still, reduceMotion]);
 
   return <canvas ref={canvasRef} className={className} aria-hidden="true" />;
 }
