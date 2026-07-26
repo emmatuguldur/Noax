@@ -188,3 +188,35 @@ of a gallery floor plan / archival blueprint:
 Everything is CSS/markup and monochrome (hairlines are low-opacity white); no new
 rendering and no new colour. The stipple renderer (`ParticleCanvas`) is now unused
 but left in place.
+
+---
+
+## v7 — ASCII physics-based interaction
+
+The ASCII shirt's cursor interaction is rebuilt from a whole-block drift into
+real per-cell spring physics. The old renderer painted the grid into a single
+`<pre>`, where individual characters can't move, so the renderer now draws onto a
+**canvas**: each ramp glyph is pre-rendered once into a small atlas and blitted
+per cell with `drawImage` (fast enough for the full ~5k-cell grid every frame).
+
+Every cell is a tiny 2D spring driven by plain-number math in a `requestAnimation‑
+Frame` loop — no CSS transitions or easing anywhere in the motion:
+
+- Each cell has a rest position (its grid slot), a current offset, and a velocity.
+- The cursor applies a radial **repulsion** to cells within a falloff radius, so
+  characters bow out of its path.
+- Each displaced cell is pulled home by a **spring-damper** (`f = −k·x − c·v`),
+  tuned under critical damping (ζ ≈ 0.52) so it overshoots slightly and wobbles
+  before settling, rather than snapping or easing flatly.
+- Only cells near the cursor (plus any still settling) run the math — a small
+  active set — and the loop sleeps entirely once everything is at rest, waking on
+  the next pointer move.
+
+It coexists with the existing ASCII-default / "View" toggle: the physics only run
+while the ASCII layer is active and the pointer is over it, it's gated to
+hover-capable (desktop) pointers, and it doesn't touch the toggle-to-photo
+crossfade. Reduced-motion renders the grid statically with no loop. The previous
+whole-block mouse-follow is removed (this replaces it).
+
+Not in this round (as specified): the ASCII↔photo dissolve/pixel-sort transition,
+and custom cursor states.
