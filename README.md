@@ -65,6 +65,11 @@ slots.
   overwrite it. NX-02..05 read "Forthcoming" until their photos land.
 - Shape art lives in `public/shapes/` (star = About, diamond = Shop,
   sphere = Story, triangle = Contact); the flower in `public/brand/flower.png`.
+- v9 decor lives in `public/decor/`: `column.png`, `cobweb-1.png` (the fine orb
+  web, used top-right), `cobweb-2.png` (the wide drape, top-left) and
+  `spider-hanging.png`. Swapping any of these means re-checking the geometry
+  constants noted in the v9 section — the placement math is measured off these
+  exact files' alpha channels.
 
 ## Fonts
 Jost (display / wordmark), Martian Mono (ASCII + technical labels), Archivo
@@ -295,3 +300,54 @@ shapes converging slightly earlier.
 the dissolve's feel (`DISSOLVE_MS`, `DISSOLVE_FADE`, `DISSOLVE_LIFT` in
 `AsciiRenderer`), the bloom's strength, and whether the statement's two beats
 land at the right moment against the melt.
+
+---
+
+## v9 — abandoned museum
+
+Time passing in the room v6's framing already built. Two new components, both
+pure CSS and markup, both rendered inside `Hero` at z-0 next to the pillars —
+so `.hero-content` (z-1) is always in front and the fixed shape overlay (z-40)
+always above that. No new rendering, no new colour, nothing interactive.
+
+- **`HeroColumns`** — the carved column, mirrored, flanking the shirt. The
+  literal version of the hairline `.pillar` rules, standing outboard of them.
+- **`Cobwebs`** — a drape in the top-left corner, a different web in the
+  top-right, and one spider on a thread from the top edge. Two drawings rather
+  than one mirrored twice: decay that matches on both sides reads as ornament.
+
+**Placement is derived from the artwork, not eyeballed.** `column.png` is a
+375×666 canvas with the stone inset ~22% each side, so the *visible* shaft is
+1:3.12 and 0.306× the box height wide. Both constants are in the CSS with the
+arithmetic spelled out. Sizing runs off `height` with `width: auto` throughout,
+which is what guarantees no drawing is ever stretched.
+
+**The columns' width budget is real.** They have to fit between the frame and
+the nav shapes, which are anchored at 21.5vw / 81.8vw and drift up to ~41px on
+the cursor parallax — so height is capped at `min(48svh, 59vw - 28rem)`. The
+second term is what shrinks them as the viewport narrows; by 1280px it stops
+yielding anything that reads as architecture, so below that they're dropped
+rather than shown as miniatures. Verified against measured rects at 1920, 1440,
+1280, 1024 and 390: no column touches a nav shape, the arrow, or the wordmark
+at any size, even at worst-case drift.
+
+Both layers measure against `100svh`, not the hero — the hero runs past the
+fold on shorter screens (see v8's layout note), and a column anchored to *its*
+bottom edge puts its base below the horizon.
+
+**Opacity is the only dial.** Columns 0.17, drape 0.14, right-hand web 0.19,
+spider 0.16 — all within the brief's 10–20%. The right-hand web is deliberately
+higher than the left: it's much lighter line work, so inverting it yields a
+dimmer white and matching numbers would leave that corner looking empty. The
+column is the one asset **not** inverted; unlike the flower and the shapes it's
+already light-on-transparent, so it only gets `grayscale(1)`.
+
+Each web is feathered by a radial mask anchored at its own corner, so only the
+inner edge is taken and the torn silhouette survives. The spider sways ±0.9°
+about the thread's anchor on a 38s round trip — roughly 4px of travel, four
+times slower than the shapes' idle drift, and declared only under
+`prefers-reduced-motion: no-preference`.
+
+Not done, and available if wanted: the optional wide drape across the top edge
+of the hero container. Two corner webs already carry it, and the brief asked to
+err quiet.
