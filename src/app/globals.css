@@ -231,12 +231,6 @@
   user-select: none;
 }
 
-.ascii-follow {
-  position: absolute;
-  inset: 0;
-  will-change: transform;
-}
-
 .ascii-layer {
   position: absolute;
   inset: 0;
@@ -246,14 +240,8 @@
   transition: opacity 240ms ease;
 }
 
-.ascii-plate {
-  margin: 0;
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-weight: 400;
-  font-variant-ligatures: none;
-  white-space: pre;
-  color: var(--paper);
-  -webkit-font-smoothing: antialiased;
+.ascii-canvas {
+  display: block;
 }
 
 @keyframes shirtSlideOut {
