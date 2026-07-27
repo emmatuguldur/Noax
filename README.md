@@ -372,9 +372,22 @@ shirt was making you ask for the one thing it exists to show.
 - **Spider, moved.** It hangs in the shape section now instead of greeting you
   on load. It lives in `ShapeField` and reads `--assembled` — the same 0..1
   convergence the eyebrow already uses — so it fades and lowers itself in as the
-  row forms, and is fully absent at the top of the page. Two elements, because
-  the wrapper's transform is spent on the drop and the sway needs its own.
-  The hero's corner drapes are unaffected.
+  row forms, and is fully absent at the top of the page. The hero's corner
+  drapes are unaffected.
+- **Spider idle bob.** On top of the entrance, the artwork runs two continuous
+  loops: an 8px vertical bob on a 4.8s round trip (the strand giving and taking
+  up again — rest is the top of the travel, so it only ever hangs *below* it),
+  and the pre-existing ±0.9° sway on a 38s one. The periods are deliberately
+  unrelated so they never line up into something that reads as a cycle.
+
+  **Three motions, two elements.** The wrapper's `transform` is spent on the
+  scroll entrance, so the two idle loops share the artwork by animating the
+  *individual* transform properties — `translate` for the bob, `rotate` for the
+  sway — instead of both fighting over the `transform` shorthand. That's what
+  lets them run on different periods without a third wrapper div existing only
+  to hold one of them. Setting `transform` on `.shape-spider-art` breaks it.
+  Measured in-browser: bob 0→7.94px over its cycle, sway 0.83° across the same
+  six seconds, wrapper offset dead constant throughout.
 
 **The shirt reveals itself again.** Every design now plays the dissolve on
 arrival: the grid types on, holds ~1s, then melts off the photograph beneath

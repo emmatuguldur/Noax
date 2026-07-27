@@ -713,9 +713,13 @@
    spider lowers itself in exactly as the row forms and is fully absent at the
    top of the page.
 
-   Two elements because two transforms: the wrapper owns the drop (driven by
-   `--assembled`), the artwork inside owns the sway. One element can't do both
-   — the animation would simply overwrite the other. */
+   Three motions, two elements. The wrapper owns the entrance drop, which is a
+   plain declaration driven by `--assembled`; the artwork owns the two idle
+   loops. They can share an element because they animate the *individual*
+   transform properties — `rotate` for the sway, `translate` for the bob —
+   rather than both fighting over the `transform` shorthand, which is what lets
+   them run on unrelated periods without a third wrapper div to hold one of
+   them. Anything that sets `transform` on `.shape-spider-art` breaks that. */
 .shape-spider {
   --spider-h: clamp(9rem, 24svh, 16rem);
   position: fixed;
@@ -745,20 +749,37 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  /* A 38s round trip of ±0.9° — about 4px of travel at the spider, and four
-     times slower than the shapes' idle drift. Meant to be noticed only after
-     you've already found it. */
+  /* Two loops on deliberately unrelated periods — 4.8s and 38s — so they never
+     line up and the motion doesn't read as a cycle. `alternate` is what makes
+     each one a round trip rather than a sawtooth that snaps back. */
   .shape-spider-art {
-    animation: spiderSway 19s ease-in-out infinite alternate;
+    animation:
+      spiderBob 2.4s ease-in-out infinite alternate,
+      spiderSway 19s ease-in-out infinite alternate;
   }
 }
 
-@keyframes spiderSway {
+/* The strand giving and taking up again. Rest is the top of the travel and it
+   only ever hangs *below* that, which is the way weight works; 8px over 4.8s is
+   slow enough to catch the eye without ever asking for it. */
+@keyframes spiderBob {
   from {
-    transform: rotate(-0.9deg);
+    translate: 0 0;
   }
   to {
-    transform: rotate(0.9deg);
+    translate: 0 8px;
+  }
+}
+
+/* A 38s round trip of ±0.9° — about 4px of travel at the spider, and four
+   times slower than the shapes' idle drift. Pivots at the thread's anchor via
+   `transform-origin`, which individual transform properties honour too. */
+@keyframes spiderSway {
+  from {
+    rotate: -0.9deg;
+  }
+  to {
+    rotate: 0.9deg;
   }
 }
 
