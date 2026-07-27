@@ -64,12 +64,15 @@ slots.
 - In `src/data/designs.ts`, **NX-01 "Interference"** is a name/blurb I wrote —
   overwrite it. NX-02..05 read "Forthcoming" until their photos land.
 - Shape art lives in `public/shapes/` (star = About, diamond = Shop,
-  sphere = Story, triangle = Contact); the flower in `public/brand/flower.png`.
-- v9 decor lives in `public/decor/`: `column.png`, `cobweb-1.png` (the fine orb
-  web, used top-right), `cobweb-2.png` (the wide drape, top-left) and
-  `spider-hanging.png`. Swapping any of these means re-checking the geometry
-  constants noted in the v9 section — the placement math is measured off these
-  exact files' alpha channels.
+  sphere = Story, triangle = Contact).
+- `public/brand/flower.png` is **no longer used** — v10 took the watermark out
+  from behind the wordmark. The file is left on disk in case it comes back;
+  nothing references it.
+- Decor lives in `public/decor/`: `cobweb-1.png` (the fine orb web, top-right
+  of the hero), `cobweb-2.png` (the wide drape, top-left) and
+  `spider-hanging.png` (in the shape section, not the hero). Swapping any of
+  these means re-checking the geometry constants in the CSS — the placement
+  math is measured off these exact files' alpha channels.
 
 ## Fonts
 Jost (display / wordmark), Martian Mono (ASCII + technical labels), Archivo
@@ -351,3 +354,62 @@ times slower than the shapes' idle drift, and declared only under
 Not done, and available if wanted: the optional wide drape across the top edge
 of the hero container. Two corner webs already carry it, and the brief asked to
 err quiet.
+
+---
+
+## v10 — subtraction, and the arrival made automatic
+
+Mostly reversal. The hero was carrying three things it didn't need, and the
+shirt was making you ask for the one thing it exists to show.
+
+- **Columns, gone.** `HeroColumns`, all the `.hero-column*` CSS, and
+  `public/decor/column.png` are deleted, not resized. The hairline `.pillar`
+  rules v6 added are untouched and go back to being the only colonnade.
+- **Flower, gone.** `BrandMark` is now just the wordmark. Typography and
+  tracking are exactly as they were; what went with the flower is the stacking
+  context and the top padding that only existed to make room for it. The asset
+  is still in `public/brand/` but nothing points at it.
+- **Spider, moved.** It hangs in the shape section now instead of greeting you
+  on load. It lives in `ShapeField` and reads `--assembled` — the same 0..1
+  convergence the eyebrow already uses — so it fades and lowers itself in as the
+  row forms, and is fully absent at the top of the page. Two elements, because
+  the wrapper's transform is spent on the drop and the sway needs its own.
+  The hero's corner drapes are unaffected.
+
+**The shirt reveals itself again.** Every design now plays the dissolve on
+arrival: the grid types on, holds ~1s, then melts off the photograph beneath
+it. This is the transition that already existed, moved from "on click" to "on
+arrival" — the physics, the per-cell thresholds and the reassemble are all
+untouched.
+
+- `autoReveal` is the whole state addition. Set on mount and again on every
+  design the arrow brings in; cleared the moment you work the toggle yourself.
+  So the catalogue reads as a series of arrivals, while a stage you've taken
+  manual control of stays where you put it.
+- The clock re-arms off `index`, not just the flag — cycling designs leaves
+  both `mode` and `autoReveal` already where the effect wants them, and without
+  `index` in the deps the second design would sit on its grid forever.
+- **Hover doesn't cancel it.** Pushing the characters around is interaction
+  with the rendering, not a request to keep it, so the physics and the clock
+  run concurrently. v8's window-level "any input skips the intro" listeners are
+  gone — they were what made interaction cut the ceremony short.
+- `AUTO_REVEAL_MS` is 1000 and the renderer's default type-on is 420ms, so the
+  finished grid is complete and readable for roughly half a second. v8 slowed
+  the type-on to 900ms for its intro; at a 1s beat that leaves no beat, so the
+  slow type-on and its `revealMs` override are gone.
+- `--dissolve` is re-zeroed on the way back into ASCII. `settle` parks it at 1
+  and the property outlives the transition that wrote it; the next forward
+  dissolve sets `dissolving` a frame before the rAF loop writes its first
+  progress value, and a stale 1 in that gap flashed the whole photograph. Only
+  visible now that the forward transition runs on every design change.
+- `REVEAL_CEILING_MS` (5200) survives from v8 and still matters: the ASCII
+  layer is transparent until it has a grid, and the photo beneath is held at
+  zero while ASCII is active, so a 404'd photo or a `document.fonts.ready` that
+  never resolves would otherwise leave the stage blank. It lands the garment
+  regardless.
+
+**One thing left alone deliberately.** The hero copy's `.stage-N` delays were
+tuned against v8's clock, where the dissolve began at 1420ms. It now begins at
+1000ms, so the turn lands late in the melt rather than midway. Still a beat, so
+the numbers are untouched — pull stages 3 and 4 in by ~400ms if you want the
+original relationship back. Noted at the top of `globals.css`.

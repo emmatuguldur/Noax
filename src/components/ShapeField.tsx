@@ -156,6 +156,16 @@ export default function ShapeField() {
 
       <nav ref={fieldRef} className="shape-field" aria-label="Explore">
         <p className="shape-field-eyebrow">Four ways in</p>
+
+        {/* Lowers itself into the room as the shapes line up. Opacity and drop
+            are both read from `--assembled` in CSS — the same 0..1 the eyebrow
+            uses — so it costs nothing per frame and can't drift out of sync
+            with the row. The sway is on the artwork inside, because this
+            element's transform is already spoken for by the drop. */}
+        <span className="shape-spider" aria-hidden="true">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/decor/spider-hanging.png" alt="" className="shape-spider-art" />
+        </span>
         {NAV_ITEMS.map((item, i) => (
           <NavShape
             key={item.id}

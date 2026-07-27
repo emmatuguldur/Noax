@@ -22,10 +22,16 @@
   --paper-dim: rgba(237, 233, 226, 0.62);
 
   /* --- Hero choreography ---------------------------------------------------
-     Mirrors the intro clock in `ShirtDisplay` (INTRO_TYPE_MS 900 + hold 520,
-     then the renderer's DISSOLVE_MS 1300 — the grid has fully let go at
-     ~2720ms). Copy is staged against that so the words read as the caption to
-     the shirt's arrival. Change the constants there and change these. */
+     Mirrors the arrival clock in `ShirtDisplay`: AUTO_REVEAL_MS 1000, then the
+     renderer's DISSOLVE_MS 1300 — the grid begins to let go at 1000ms and has
+     fully gone at ~2300ms. Copy is staged against that so the words read as the
+     caption to the shirt's arrival. Change the constants there and change these.
+
+     v10 moved the dissolve 420ms earlier (it used to wait out a slowed 900ms
+     type-on plus a 520ms hold). The `.stage-N` delays below were left where
+     they were, so the turn now lands late in the melt rather than mid-way —
+     still a beat, but pull 3 and 4 in by ~400ms if it wants to be the one it
+     was tuned to be. */
   --t-dur: 900ms;
   --t-ease: cubic-bezier(0.2, 0.7, 0.3, 1);
 }
@@ -111,52 +117,17 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Brand mark — flat flower watermark, wordmark in front
+   Brand mark — the wordmark, unaccompanied
+
+   The flower watermark that used to sit behind this is gone, and with it the
+   stacking context and the padding that existed to make room for it.
 --------------------------------------------------------------------------- */
 .brand-mark {
-  position: relative;
   display: grid;
   place-items: center;
-  /* Own stacking context: without it, the flower's negative z-index resolved
-     against the root and the opaque body background painted over it — which is
-     why it kept "disappearing". */
-  isolation: isolate;
-  padding-top: clamp(3.5rem, 9vh, 6rem);
-}
-
-.brand-flower {
-  position: absolute;
-  z-index: 0;
-  top: 50%;
-  left: 50%;
-  width: clamp(19rem, 40vw, 29rem);
-  transform: translate(-50%, -46%);
-  opacity: 0.18;
-  /* The artwork is near-black, so on the void it only reads if lifted. Invert
-     turns the petals light and the whole flower shows as a faint watermark;
-     screen/brightness lifted only the bright core, which looked like nothing. */
-  filter: invert(1);
-  pointer-events: none;
-  user-select: none;
-  /* Feather the edges into the page so the mark melts in rather than sitting
-     on it as a rectangle. */
-  -webkit-mask-image: radial-gradient(
-    ellipse 62% 62% at 50% 48%,
-    #000 34%,
-    rgba(0, 0, 0, 0.4) 58%,
-    transparent 74%
-  );
-  mask-image: radial-gradient(
-    ellipse 62% 62% at 50% 48%,
-    #000 34%,
-    rgba(0, 0, 0, 0.4) 58%,
-    transparent 74%
-  );
 }
 
 .brand-word {
-  position: relative;
-  z-index: 1;
   margin: 0;
   font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
   font-weight: 400;
@@ -249,8 +220,7 @@
   margin-right: -0.42em;
 }
 
-/* The brand mark carries its own top padding for the flower watermark; the
-   overline now occupies that space, so pull it back up under it. */
+/* Sets the gap between the overline and the wordmark. */
 .hero-head .brand-mark {
   padding-top: clamp(1rem, 2.5vh, 1.75rem);
 }
@@ -362,98 +332,20 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Abandoned museum — columns, cobwebs, one spider
+   Abandoned museum — the corner drapes
 
    Time passing in the room the framing already built. Everything below is
    aria-hidden, non-interactive, and lives in the hero's z-0 layer next to the
-   pillars, so `.hero-content` (z-1) — wordmark, flower, shirt, statement — is
-   always in front of it, and the fixed shape overlay (z-40) always above that.
+   pillars, so `.hero-content` (z-1) — wordmark, shirt, statement — is always in
+   front of it, and the fixed shape overlay (z-40) always above that.
 
-   The register is the flower watermark's, not Halloween's: monochrome, low
-   opacity, edges feathered rather than cut. If any of it needs to come back,
-   raise the three `opacity` values; they are the only dial that matters.
+   Monochrome, low opacity, edges feathered rather than cut. If it needs to come
+   back, raise the `opacity` values; they are the only dial that matters. The
+   spider that used to hang here now lives with the shape row — see
+   `.shape-spider`, further down.
 --------------------------------------------------------------------------- */
 
-/* --- Columns -------------------------------------------------------------
-   The artwork is a 375x666 canvas with the stone inset ~22% on each side, so
-   two constants fall out of its geometry, both expressed as fractions of the
-   box *height* because `height` is what sizes the image:
-
-     0.126 — transparent padding on one side
-     0.306 — width of the visible shaft (a 1:3.12 silhouette)
-
-   Nothing here sets a width. `height` + `width: auto` is what guarantees the
-   ratio is never stretched. */
-.hero-columns {
-  position: absolute;
-  /* Deliberately 100svh rather than `inset: 0`. The hero runs past the fold on
-     shorter screens (the statement and the signature cost ~14vh that a 900px
-     laptop doesn't have), and a column anchored to the *hero's* bottom edge
-     lands its base somewhere below the horizon. The room these frame is the
-     first screen, so that's the box they measure against. */
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 100svh;
-  z-index: 0;
-  pointer-events: none;
-
-  /* Capped twice, and the smaller cap wins:
-       48svh        — the shirt stage stands ~52vh tall at its own cap, so this
-                      keeps the columns on its scale without outgrowing the hero.
-       59vw - 28rem — what the outer margin can actually spare. The nav shapes
-                      are anchored at 21.5vw / 81.8vw and drift up to ~41px on
-                      the cursor parallax, so the shaft has to fit between them
-                      and the frame. This is the term that shrinks the columns
-                      as the viewport narrows; by 1280px it has stopped yielding
-                      anything that still reads as architecture, which is where
-                      the media query below takes over. */
-  --col-h: min(48svh, 59vw - 28rem);
-  --col-pad: calc(var(--col-h) * 0.126);
-  /* Just inside the perimeter frame (fixed at 22px) — the colonnade stands on
-     the room's edge rather than floating in the margin. */
-  --col-inset: 1.75rem;
-}
-
-.hero-column {
-  position: absolute;
-  /* Standing on an implied floor, high enough that the plinth reads whole —
-     a column cropped at its base looks like a mistake, not like depth. */
-  bottom: clamp(1rem, 5svh, 3.5rem);
-  height: var(--col-h);
-  width: auto;
-  opacity: 0.17;
-  /* No invert here — unlike the flower and the shapes this artwork is already
-     light-on-transparent. It only carries a little warmth the rest of the page
-     doesn't, so drop that and let it sit in the two-ink palette. */
-  filter: grayscale(1);
-  user-select: none;
-}
-
-/* `--col-inset` positions the *stone*, so each offset backs off by the
-   artwork's own transparent margin. The right column is mirrored in place;
-   `right` is a layout offset and resolves before the transform, so the flip
-   only swaps which padding faces out — and the two are within half a percent
-   of each other, which is why one constant covers both. */
-.hero-column-left {
-  left: calc(var(--col-inset) - var(--col-pad));
-}
-
-.hero-column-right {
-  right: calc(var(--col-inset) - var(--col-pad));
-  transform: scaleX(-1);
-}
-
-@media (max-width: 1279px) {
-  /* Below this the margin outside the nav shapes can't hold a column at a size
-     that still reads as architecture, so take them out rather than crowd the
-     shirt with a pair of miniatures. */
-  .hero-columns {
-    display: none;
-  }
-}
-
-/* --- Cobwebs and the spider ----------------------------------------------
+/* --- Cobwebs -------------------------------------------------------------
    Both drawings are ink-on-paper, so they invert like the shapes and the
    flower. Each web is feathered by a radial mask anchored at its own corner:
    the mask only takes the *inner* edge, so the torn silhouette on the hanging
@@ -522,54 +414,6 @@
     rgba(0, 0, 0, 0.45) 70%,
     transparent 100%
   );
-}
-
-.spider {
-  --spider-h: clamp(11rem, 30svh, 21rem);
-  position: absolute;
-  /* The thread starts 3.75% down the canvas; lifting the box by exactly that
-     puts its top on the viewport's top edge. */
-  top: calc(var(--spider-h) * -0.0375);
-  /* Parked between the flower watermark (which reaches 33vw at its widest) and
-     the nav shapes anchored at 81.8vw — the one quiet gap up here. */
-  right: 24%;
-  height: var(--spider-h);
-  width: auto;
-  opacity: 0.16;
-  filter: grayscale(1) invert(1);
-  user-select: none;
-  /* Pivot at the thread's anchor, not the box centre. */
-  transform-origin: 48% 0;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  /* A 38s round trip of ±0.9° — about 4px of travel at the spider, and four
-     times slower than the shapes' idle drift. Meant to be noticed only after
-     you've already found it. */
-  .spider {
-    animation: spiderSway 19s ease-in-out infinite alternate;
-  }
-}
-
-@keyframes spiderSway {
-  from {
-    transform: rotate(-0.9deg);
-  }
-  to {
-    transform: rotate(0.9deg);
-  }
-}
-
-@media (max-width: 767px) {
-  /* Phones lose the flower's clearance and the shapes move to the edges, so
-     the spider comes in smaller and further out — above the nav shapes rather
-     than beside them. 7% rather than the desktop 24% because the wordmark is
-     the binding neighbour here, not the shapes: at 12% the thread hangs about
-     2px off the X on a 360px screen. */
-  .spider {
-    --spider-h: clamp(8rem, 22svh, 12rem);
-    right: 7%;
-  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -860,6 +704,71 @@
 .nav-shape:hover .nav-shape-plate,
 .nav-shape:focus-visible .nav-shape-plate {
   filter: invert(1) drop-shadow(0 0 16px rgba(237, 233, 226, 0.3));
+}
+
+/* --- The spider ----------------------------------------------------------
+   Moved here from the hero: it is no longer something you land on, it is
+   something the shape section brings with it. `--assembled` is the same 0..1
+   convergence the eyebrow reads, written once per frame by ShapeField, so the
+   spider lowers itself in exactly as the row forms and is fully absent at the
+   top of the page.
+
+   Two elements because two transforms: the wrapper owns the drop (driven by
+   `--assembled`), the artwork inside owns the sway. One element can't do both
+   — the animation would simply overwrite the other. */
+.shape-spider {
+  --spider-h: clamp(9rem, 24svh, 16rem);
+  position: fixed;
+  /* The thread starts 3.75% down the canvas; lifting the box by exactly that
+     puts its top on the viewport's top edge, where a thread should start. */
+  top: calc(var(--spider-h) * -0.0375);
+  /* Outboard of the assembled row, which reaches ~395px either side of centre
+     at its widest. */
+  right: 12%;
+  height: var(--spider-h);
+  /* The row is the event; this is a detail beside it, so it lands quieter than
+     the shapes and never competes with the labels fading up under them. */
+  opacity: calc(var(--assembled, 0) * 0.16);
+  /* Lowers the last 34px as it arrives — it is on a thread, so it comes down. */
+  transform: translateY(calc((1 - var(--assembled, 0)) * -34px));
+  pointer-events: none;
+}
+
+.shape-spider-art {
+  display: block;
+  height: 100%;
+  width: auto;
+  filter: grayscale(1) invert(1);
+  user-select: none;
+  /* Pivot at the thread's anchor, not the box centre. */
+  transform-origin: 48% 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* A 38s round trip of ±0.9° — about 4px of travel at the spider, and four
+     times slower than the shapes' idle drift. Meant to be noticed only after
+     you've already found it. */
+  .shape-spider-art {
+    animation: spiderSway 19s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes spiderSway {
+  from {
+    transform: rotate(-0.9deg);
+  }
+  to {
+    transform: rotate(0.9deg);
+  }
+}
+
+@media (max-width: 767px) {
+  /* The row goes edge-to-edge on a phone, so the spider comes in smaller and
+     hangs clear above it rather than beside it. */
+  .shape-spider {
+    --spider-h: clamp(7rem, 17svh, 10rem);
+    right: 6%;
+  }
 }
 
 /* Sits under the shape; its opacity is driven by --lo, which ShapeField ramps

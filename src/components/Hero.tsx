@@ -1,6 +1,5 @@
 import BrandMark from "@/components/BrandMark";
 import Cobwebs from "@/components/Cobwebs";
-import HeroColumns from "@/components/HeroColumns";
 import ShirtDisplay from "@/components/ShirtDisplay";
 import SignatureLine from "@/components/SignatureLine";
 import { HERO_COPY } from "@/data/copy";
@@ -30,9 +29,8 @@ export default function Hero() {
         <span className="pillar pillar-right" />
       </div>
 
-      {/* v9's atmosphere. Both layers sit at z-0 alongside the pillars, so
-          everything in `.hero-content` (z-1) stays in front of them. */}
-      <HeroColumns />
+      {/* Corner drapes, at z-0 alongside the pillars so everything in
+          `.hero-content` (z-1) stays in front of them. */}
       <Cobwebs />
 
       <div className="hero-content">
