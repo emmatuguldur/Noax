@@ -65,6 +65,10 @@ slots.
   overwrite it. NX-02..05 read "Forthcoming" until their photos land.
 - Shape art lives in `public/shapes/` (star = About, diamond = Shop,
   sphere = Story, triangle = Contact).
+- `public/fabric/texture-placeholder-1.png` is a **real macro photograph** as of
+  v13. `-2.png` (label and stitching) is still a **procedurally generated
+  stand-in** — drop a real macro shot in at the same path. Any aspect ratio
+  works; the frames are `object-fit: cover`.
 - `public/brand/flower.png` is **no longer used** — v10 took the watermark out
   from behind the wordmark. The file is left on disk in case it comes back;
   nothing references it.
@@ -436,3 +440,120 @@ tuned against v8's clock, where the dissolve began at 1420ms. It now begins at
 1000ms, so the turn lands late in the melt rather than midway. Still a beat, so
 the numbers are untouched — pull stages 3 and 4 in by ~400ms if you want the
 original relationship back. Noted at the top of `globals.css`.
+
+---
+
+## v12 — material section, footer, and the hero goes quiet again
+
+Two new sections after the shape row, and one removal in the hero.
+
+**The hero statement is gone.** "The ink doesn't sit on the cloth. / It sinks
+in." was appearing directly under the garment *and* as the pull-quote in the
+new section — the same sentence twice on one page. It now lives only in the
+material section, where it has fabric to be about. The hero keeps the spec
+line; `.hero-statement`, `.hero-turn`, `.stage-3/-4` and the `stageInSoft`
+keyframes went with it, and the shirt's `max-height: 780px` compensation no
+longer has a statement to make room for. Verified: the phrase appears exactly
+once in the rendered page.
+
+**`MaterialSection`** — the answer to v4's standalone quote that v5 removed for
+being a sentence floating in a void. Same words, different argument: heading,
+process copy, two hard numbers and two macro plates come first, so by the time
+the statement arrives the claim has already been evidenced. Asymmetric top
+band (copy left, offset figures right), then the statement centred over an
+oversized ghost word with a soft glow dot off to one side.
+
+**`SiteFooter`** — wordmark and blurb left, two labelled columns right, thin
+divider, bottom bar. Sub-pages keep their own `.page-foot`; this closes the
+long scroll, which they don't have.
+
+**The shape row now has to leave.** This is the part the brief didn't call for
+and the page needed: `.shape-field` is a *fixed* overlay that used to be the
+last thing on the page, so it could assemble at mid-viewport and simply stay.
+With two sections scrolling up underneath it, four shapes parked over the
+footer would have been the result. It now fades out over `EXIT_START`→`EXIT_END`
+(1.15→1.5 scrolled viewports) and goes `inert` at 60% — a faded link that still
+catches clicks meant for the footer, or still takes focus, is the real bug.
+`.shape-spacer` grew 85vh → 150vh to give the row a proper hold and an exit
+before the material section arrives. Measured at 1440x900 and 390x844: the
+field is at opacity 0 and inert before the material section's top edge enters
+the viewport.
+
+**Footer links are secondary and inert by design.** Catalog / Archives /
+Information / Journal are *not* the four-shape navigation and don't rename or
+replace it — the shapes remain the way in. Those sections have no routes yet,
+so they render as `<span>`, not as anchors that would 404 or swallow a click.
+The only live link is the `mailto:`. Add `next/link` and the `.foot-link-live`
+class when the pages exist.
+
+**Two things worth knowing.**
+- The fabric images are procedurally generated placeholders (see Assets above),
+  not stock photography — deliberately obvious stand-ins at findable paths.
+- `.material-quote` carries the serif face and size itself rather than putting
+  them on the two spans, because `max-width` in `ch` resolves against the
+  element's *own* font — set on the container at its inherited 1rem it came out
+  about a third of the intended measure and shattered the line into four.
+
+---
+
+## v13 — the shape row is pinned, not fixed forever
+
+**Root cause fixed.** `.shape-field` was `position: fixed` indefinitely, so it
+stayed glued to the viewport over everything below it; v12 papered over that
+with an opacity fade plus `inert`. Both are gone. The field is now
+`position: sticky` inside `.shape-track`: it holds at the top of the viewport
+for the length of the track, then releases and scrolls away like any section.
+
+The guarantee is structural rather than timed — a sticky element's box cannot
+extend past its containing block, and the track ends exactly where
+`MaterialSection` begins, so overlap is impossible by construction. Measured
+across a full scroll sweep at 1440x900 and 390x844: **worst overlap 0px**, and
+a hit test at the centre of the material section and the footer returns those
+sections' own elements, never anything inside `.shape-field`. Through the
+handoff the field tracks scroll 1:1 with its bottom edge exactly on the
+material section's top — no jump, no gap.
+
+**Why not ScrollTrigger, which the brief asked for.** Two blockers, both
+concrete:
+
+1. *The scatter phase happens over the hero.* The shapes are live at scroll 0,
+   positioned at viewport-fraction anchors around the shirt. ScrollTrigger's
+   pin fixes an element wherever it sits when the pin starts, so pinning a
+   section placed after the hero would mean the shapes simply aren't there
+   during the hero — which breaks "assemble and hold exactly as before", an
+   explicit verification item in the same brief. Pinning from the document top
+   instead needs `pinSpacing: false` on an out-of-flow overlay, and then the
+   unpin returns it to the top of the document rather than parking it at the
+   end of its range.
+2. *Lenis.* ScrollTrigger needs explicit wiring to Lenis (`ScrollTrigger.update`
+   on Lenis's scroll event) or pinned elements jitter. That integration isn't
+   in `SmoothScroll` today. Native sticky needs none of it, because Lenis in
+   default mode scrolls the real document.
+
+Sticky delivers the brief's actual requirement — pinned for the assemble and
+hold, released afterwards, no manual fade or `inert` — with less machinery. If
+ScrollTrigger is wanted regardless, the Lenis wiring has to land first.
+
+**The one cost** is a wrapper. Sticky needs the field in normal flow and as the
+track's *first* child to hold from the first frame, so `.shape-under` is pulled
+up by `-100svh` to put the hero back at the top of the page. The negative margin
+goes on the wrapper, never on the field: a negative bottom margin *extends* the
+rectangle a sticky element may stick within, which would destroy the very
+containment keeping it off the footer. `.shape-field-eyebrow` and
+`.shape-spider` moved from `fixed` to `absolute` for the same reason — as fixed
+they'd have stayed glued to the viewport after the release.
+
+**Also this round.**
+- **Real fabric photo** at `public/fabric/texture-placeholder-1.png` (1024x1024
+  twill macro). The second plate stays procedural. No layout changes needed.
+- **Pull-quote removed entirely.** The ghost word and the glow dot went with it
+  — they existed to sit behind that statement, and a giant faint word with
+  nothing in front of it is a decorative band, not a section. `.material` gained
+  bottom padding, which the quote block had been providing.
+- **Footer links are real routes.** About / Contact / Shop / Story via
+  `next/link`, replacing the inert Catalog / Archives / Information / Journal
+  spans. This duplicates the four-shape destinations in text form and is the
+  only way to reach those pages without driving a scroll-scrubbed animation;
+  the shape field itself is untouched. `FOOTER_COPY` is now annotated rather
+  than `as const`, because one item deliberately has no `href` and `as const`
+  widens that to a union where `href` isn't readable at all.

@@ -22,16 +22,13 @@
   --paper-dim: rgba(237, 233, 226, 0.62);
 
   /* --- Hero choreography ---------------------------------------------------
-     Mirrors the arrival clock in `ShirtDisplay`: AUTO_REVEAL_MS 1000, then the
-     renderer's DISSOLVE_MS 1300 — the grid begins to let go at 1000ms and has
-     fully gone at ~2300ms. Copy is staged against that so the words read as the
-     caption to the shirt's arrival. Change the constants there and change these.
+     Staged against the arrival clock in `ShirtDisplay`: AUTO_REVEAL_MS 1000,
+     then the renderer's DISSOLVE_MS 1300 — the grid begins to let go at 1000ms
+     and has fully gone at ~2300ms. Change the constants there and change these.
 
-     v10 moved the dissolve 420ms earlier (it used to wait out a slowed 900ms
-     type-on plus a 520ms hold). The `.stage-N` delays below were left where
-     they were, so the turn now lands late in the melt rather than mid-way —
-     still a beat, but pull 3 and 4 in by ~400ms if it wants to be the one it
-     was tuned to be. */
+     Stages 3 and 4 belonged to the two-part statement v12 moved out of the
+     hero; what's left is the overline (1), the spec line (5) and the scroll
+     hint (6), which land after the garment has settled. */
   --t-dur: 900ms;
   --t-ease: cubic-bezier(0.2, 0.7, 0.3, 1);
 }
@@ -79,19 +76,6 @@
   }
 }
 
-@keyframes stageInSoft {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-    filter: blur(7px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-    filter: blur(0);
-  }
-}
-
 @media (prefers-reduced-motion: no-preference) {
   .stage {
     animation: stageIn var(--t-dur) var(--t-ease) backwards;
@@ -103,15 +87,6 @@
   }
 
   .stage-1 { animation-delay: 200ms; }
-  /* 1500ms — the statement opens as the grid begins to let go. */
-  .stage-3 {
-    animation: stageInSoft 1100ms var(--t-ease) 1500ms backwards;
-  }
-  /* 2200ms — the turn lands mid-dissolve. This is the beat the page is built
-     around; everything else is timed so this one is not crowded. */
-  .stage-4 {
-    animation: stageInSoft 1100ms var(--t-ease) 2200ms backwards;
-  }
   .stage-5 { animation-delay: 2850ms; }
   .stage-6 { animation-delay: 3150ms; }
 }
@@ -249,31 +224,6 @@
   text-align: center;
 }
 
-.hero-statement {
-  margin: 0;
-  max-width: 24ch;
-  font-family: var(--font-serif), Georgia, serif;
-  font-weight: 400;
-  font-size: clamp(1.5rem, 4.2vw, 3rem);
-  line-height: 1.16;
-  letter-spacing: -0.005em;
-  color: var(--paper);
-  text-wrap: balance;
-}
-
-/* The payoff, and the only warm thing on the page. Ember clears 4.8:1 on the
-   void, so it carries real text rather than decoration. */
-.hero-turn {
-  color: var(--ember);
-  font-style: italic;
-}
-
-/* Each half animates as a block, so they need to be block-level to transform —
-   but must still flow as one sentence and wrap together. */
-.hero-statement .stage {
-  display: inline-block;
-}
-
 .hero-spec {
   margin: 0;
   font-family: var(--font-mono), ui-monospace, monospace;
@@ -293,17 +243,13 @@
   }
 }
 
-/* The statement costs ~14vh that the hero did not previously spend. On a short
-   laptop screen that is the difference between the scroll hint being visible
-   and not, so give the shirt and the type back some room rather than letting
-   the hero quietly grow past the fold. */
+/* Short laptop screens are where the hero grows past the fold and takes the
+   scroll hint with it, so give the shirt and the masthead back some room. Less
+   pressing since v12 moved the statement out, but the hero still runs long on a
+   900px-tall viewport. */
 @media (max-height: 780px) {
   .shirt-stage {
     width: min(46rem, 88vw, 54vh);
-  }
-
-  .hero-statement {
-    font-size: clamp(1.25rem, 3.4vw, 2.1rem);
   }
 
   .hero-overline {
@@ -649,21 +595,42 @@
    loose hero anchors around the shirt; scrolling drags them into the row, which
    is the destination — there is no docked navbar.
 --------------------------------------------------------------------------- */
-.shape-spacer {
-  /* Pure scroll distance to reach and hold the assembled row. */
-  height: 85vh;
+/* The pin. See `page.tsx` for why the track is shaped this way. */
+.shape-track {
+  position: relative;
+}
+
+/* Pulled back up by exactly the field's height, so the hero still starts at
+   the top of the page. The field has to be the track's *first* child for
+   sticky to hold it at the viewport top from the first frame — put the
+   negative margin on the field instead and it would break its own sticky
+   containment, because a negative bottom margin *extends* the rectangle it is
+   allowed to stick within, which is the one thing keeping it off the footer. */
+.shape-under {
+  margin-top: -100svh;
+}
+
+.shape-rail {
+  /* Scroll distance for the assemble and the hold. The field releases once its
+     bottom meets the track's, i.e. at `heroHeight + this - 100svh`. */
+  height: 150vh;
   pointer-events: none;
 }
 
 .shape-field {
-  position: fixed;
-  inset: 0;
+  position: sticky;
+  top: 0;
+  height: 100svh;
   z-index: 40;
   pointer-events: none;
 }
 
+/* Absolute, not fixed: the field is its containing block and is exactly the
+   viewport while pinned, so this lands identically — but it now travels with
+   the field when it releases instead of staying stuck to the viewport. Same
+   reason applies to `.shape-spider`. */
 .shape-field-eyebrow {
-  position: fixed;
+  position: absolute;
   top: calc(50% - clamp(7rem, 15vh, 10.5rem));
   left: 50%;
   transform: translateX(-50%);
@@ -736,7 +703,7 @@
    them. Anything that sets `transform` on `.shape-spider-art` breaks that. */
 .shape-spider {
   --spider-h: clamp(9rem, 24svh, 16rem);
-  position: fixed;
+  position: absolute;
   /* The thread starts 3.75% down the canvas; lifting the box by exactly that
      puts its top on the viewport's top edge, where a thread should start. */
   top: calc(var(--spider-h) * -0.0375);
@@ -822,6 +789,249 @@
   white-space: nowrap;
   color: var(--paper);
   opacity: var(--lo, 0);
+}
+
+/* ---------------------------------------------------------------------------
+   Material section — an editorial spread
+
+   Copy and two hard numbers on the left, two offset macro plates on the right.
+   v12 closed it with a pull-quote over an oversized ghost word; v13 took the
+   quote out and the ghost and glow dot went with it, since they existed to sit
+   behind it.
+
+   Everything reuses the scale already in the file — display face for headings,
+   mono for labels, `--paper-dim` for prose, same as `.page-body`.
+--------------------------------------------------------------------------- */
+.material {
+  position: relative;
+  max-width: 80rem;
+  margin: 0 auto;
+  /* The bottom value used to be 0 because the pull-quote block carried the
+     space down to the footer. With that gone the section has to hold its own
+     tail, or the footer sits straight under the plates. */
+  padding: clamp(4rem, 14vh, 9rem) clamp(1rem, 5vw, 4rem) clamp(3rem, 10vh, 6.5rem);
+}
+
+.material-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(2.5rem, 6vw, 4.5rem);
+  align-items: start;
+}
+
+@media (min-width: 350px) {
+  .material-top {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+/* Dashed lead-in, same archival register as the corner marks' dotted leaders. */
+.material-eyebrow {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+.material-eyebrow::before {
+  content: "";
+  display: block;
+  width: 56px;
+  margin-bottom: 0.9rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.28);
+}
+
+.material-title {
+  margin-top: clamp(1rem, 2.5vh, 1.6rem);
+  max-width: 11ch;
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 400;
+  font-size: clamp(1.9rem, 4.6vw, 3.2rem);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: var(--paper);
+}
+
+.material-body {
+  margin-top: clamp(1.25rem, 3vh, 2rem);
+  max-width: 44ch;
+  font-size: 0.9rem;
+  line-height: 1.75;
+  color: var(--paper-dim);
+}
+
+/* --- The two numbers ------------------------------------------------------ */
+/* A grid rather than a wrapping flex row: the two numbers are a pair and read
+   as one comparison, so they stay side by side down to the narrowest screen
+   instead of breaking into a stack the moment the labels get long. */
+.material-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1.25rem, 6vw, 3.5rem);
+  max-width: 30rem;
+  margin-top: clamp(2rem, 5vh, 3.25rem);
+}
+
+.material-stat-value {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(1.6rem, 3.4vw, 2.3rem);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--paper);
+}
+
+/* The section's only warm mark, and it is one glyph wide. */
+.material-stat-unit {
+  color: var(--ember);
+}
+
+.material-stat-label {
+  margin-top: 0.8rem;
+  padding-top: 0.65rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.18);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  line-height: 1.7;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+/* --- The plates ----------------------------------------------------------- */
+.material-figures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.75rem, 2vw, 1.25rem);
+  align-items: start;
+}
+
+.material-figure {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  /* `cover` is what lets real photography drop in at any ratio later without
+     the layout moving. */
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  filter: grayscale(1);
+  user-select: none;
+}
+
+/* Offset rather than aligned, so the pair reads as laid down by hand. */
+.material-figure-2 {
+  margin-top: clamp(2rem, 7vw, 4.5rem);
+}
+
+/* ---------------------------------------------------------------------------
+   Homepage footer
+
+   Sub-pages keep their own `.page-foot`; this closes the long scroll, which
+   they don't have. The navigation column repeats the four shape destinations
+   as text links — a duplicate of that system, not a replacement for it.
+--------------------------------------------------------------------------- */
+.site-foot {
+  max-width: 82rem;
+  margin: 0 auto;
+  /* The bottom padding clears the fixed corner marks, which sit ~1.5rem off the
+     viewport floor and would otherwise land on top of the bottom bar at the end
+     of the scroll. */
+  padding: clamp(4rem, 12vh, 7rem) clamp(1rem, 5vw, 4rem) clamp(3.5rem, 9vh, 5.5rem);
+}
+
+.site-foot-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(2.5rem, 6vw, 4rem);
+}
+
+@media (min-width: 768px) {
+  .site-foot-main {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  }
+}
+
+.site-foot-word {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-size: 1.15rem;
+  letter-spacing: 0.28em;
+  margin-right: -0.28em;
+  color: var(--paper);
+}
+
+.site-foot-blurb {
+  margin-top: clamp(1rem, 2.5vh, 1.5rem);
+  max-width: 36ch;
+  font-size: 0.82rem;
+  line-height: 1.75;
+  color: var(--paper-dim);
+}
+
+.site-foot-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: clamp(2rem, 5vw, 3rem);
+}
+
+.site-foot-tag {
+  padding-bottom: 0.7rem;
+  border-bottom: 1px dotted rgba(255, 255, 255, 0.15);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+.site-foot-list {
+  margin-top: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  list-style: none;
+  padding: 0;
+}
+
+.foot-link {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+  text-decoration: none;
+}
+
+/* Carried by everything that actually goes somewhere. Items without an `href`
+   stay plain `.foot-link` so nothing offers a hover state it can't honour. */
+.foot-link-live {
+  transition: color 200ms ease;
+}
+
+.foot-link-live:hover,
+.foot-link-live:focus-visible {
+  color: var(--ember);
+}
+
+.site-foot-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: clamp(3rem, 8vh, 5rem);
+  padding-top: clamp(1.25rem, 3vh, 1.75rem);
+  border-top: 1px solid rgba(237, 233, 226, 0.08);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+@media (max-width: 480px) {
+  .site-foot-bar {
+    font-size: 8px;
+    letter-spacing: 0.16em;
+  }
 }
 
 /* ---------------------------------------------------------------------------
