@@ -433,17 +433,31 @@
      without the hero overflowing on short laptop screens. */
   width: min(46rem, 88vw, 62vh);
   aspect-ratio: 544 / 458;
-  /* Arch-cut niche: gently arched top corners, a soft radial vignette behind
-     the piece, and a hairline border. `overflow` is left visible on purpose so
-     the border/background arch but the arrow and mouse-follow ASCII (children)
-     are never clipped — the background respects the radius on its own. */
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  /* Arch-cut niche: gently arched top corners and a soft radial vignette behind
+     the piece. `overflow` is left visible on purpose so the border/background
+     arch but the arrow and mouse-follow ASCII (children) are never clipped —
+     the background respects the radius on its own. */
+  /* The hairline is held in the box at all times and only coloured in on hover.
+     Removing it outright instead would grow the padding box by 2px, and the
+     ASCII layer is `inset: 0` against that box with a ResizeObserver on it — so
+     a bare `border: none` would re-measure and rebuild the whole grid on every
+     mouse in and out. */
+  border: 1px solid transparent;
+  transition: border-color 260ms ease;
   border-radius: clamp(48px, 11vw, 150px) clamp(48px, 11vw, 150px) 0 0;
   background: radial-gradient(
     circle at center,
     rgba(30, 30, 30, 0.4) 0%,
     rgba(10, 10, 10, 0.9) 100%
   );
+}
+
+/* Gated on a real hover pointer: on touch, `:hover` sticks after a tap and the
+   niche would keep an outline nobody asked for until you tapped elsewhere. */
+@media (hover: hover) {
+  .shirt-stage:hover {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
 }
 
 /* The light the garment arrives into. Opacity is driven from JS by the

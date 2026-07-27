@@ -421,6 +421,16 @@ untouched.
   never resolves would otherwise leave the stage blank. It lands the garment
   regardless.
 
+**Follow-up: the niche border is hover-only.** v6's hairline around
+`.shirt-stage` no longer shows at rest — the arch and its vignette carry the
+framing, and the outline appears on hover. It stays in the box as
+`border: 1px solid transparent` and only gets its colour back, because removing
+it outright would grow the padding box by 2px, and the ASCII layer is
+`inset: 0` against that box with a `ResizeObserver` watching — a bare
+`border: none` would re-measure and rebuild the whole grid on every mouse in
+and out. The rule is gated on `@media (hover: hover)` so a tap on a touch device
+can't leave the outline stuck on.
+
 **One thing left alone deliberately.** The hero copy's `.stage-N` delays were
 tuned against v8's clock, where the dissolve began at 1420ms. It now begins at
 1000ms, so the turn lands late in the melt rather than midway. Still a beat, so
