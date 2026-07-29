@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import gsap from "gsap";
 
 import { DESIGNS } from "@/data/designs";
@@ -187,6 +188,16 @@ export default function ShopChaos() {
               onPointerMove={tiltable ? onMove(i) : undefined}
               onPointerLeave={tiltable ? onLeave(i) : undefined}
             >
+              {/* The card is the link. This wrapper sits between `.riot-slot`
+                  (which owns the perspective) and `.riot-plate` (which owns the
+                  3D tilt), so it has to carry `transform-style: preserve-3d` or
+                  it flattens the whole card — see `.riot-link` in globals.css.
+                  Nothing else about the card changes. */}
+              <Link
+                href={`/shop/${design.id}`}
+                className="riot-link"
+                aria-label={`${design.name} — catalogue ${design.cat}`}
+              >
               <div
                 className="riot-plate"
                 ref={(el) => {
@@ -223,6 +234,7 @@ export default function ShopChaos() {
                   <span className="riot-ed">ED. {design.edition}</span>
                 </div>
               </div>
+              </Link>
 
               <p className="riot-blurb">{design.blurb}</p>
             </article>

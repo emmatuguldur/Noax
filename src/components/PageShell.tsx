@@ -5,7 +5,12 @@ import { NAV_ITEMS } from "@/data/navItems";
 interface PageShellProps {
   eyebrow: string;
   title: string;
-  children: React.ReactNode;
+  /**
+   * The prose column. Optional: the product page carries its copy inside the
+   * two-column layout it passes as `bleed`, so a 36rem measure above that would
+   * only be an empty gap.
+   */
+  children?: React.ReactNode;
   /**
    * Optional full-bleed region, rendered after the prose column and allowed to
    * escape its 36rem measure. It hangs off `.page-main` rather than
@@ -39,7 +44,9 @@ export default function PageShell({ eyebrow, title, children, bleed }: PageShell
       <main className="page-main">
         <p className="page-eyebrow">{eyebrow}</p>
         <h1 className="page-title">{title}</h1>
-        <div className="page-body">{children}</div>
+        {/* Skipped entirely when empty — `.page-body` carries a top margin that
+            would otherwise open a gap under the title for nothing. */}
+        {children ? <div className="page-body">{children}</div> : null}
         {bleed ? <div className="page-bleed">{bleed}</div> : null}
       </main>
 

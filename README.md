@@ -58,9 +58,12 @@ slots.
   these three files if you'd rather drop it entirely.
 
 ## Assets & placeholders — replace these
-- `public/shirts/design-1.png` is the real shirt (transparent cutout).
-  `design-2..5.png` are the **same image as stand-ins**; drop real cutouts in and
-  update `src/data/designs.ts`.
+- `public/shirts/design-1.png` is the real shirt (transparent cutout), joined in
+  v14 by `design-1-back.png` and `design-1-model.png` — the three views the
+  product gallery shows. `design-2..5.png` are the **same image as stand-ins**
+  with no back or model shot; drop real cutouts in and update
+  `src/data/designs.ts`. The gallery renders whatever views exist, so adding
+  `back` / `model` to a slot is all that's needed to give it a full set.
 - In `src/data/designs.ts`, **NX-01 "Interference"** is a name/blurb I wrote —
   overwrite it. NX-02..05 read "Forthcoming" until their photos land.
 - Shape art lives in `public/shapes/` (star = About, diamond = Shop,
@@ -557,3 +560,108 @@ they'd have stayed glued to the viewport after the release.
   the shape field itself is untouched. `FOOTER_COPY` is now annotated rather
   than `as const`, because one item deliberately has no `href` and `as const`
   widens that to a union where `href` isn't readable at all.
+
+---
+
+## v14 — clickable prints and a product page
+
+First real commerce content beyond the homepage.
+
+**The shop cards are links now, and nothing else about them changed.** The only
+edit to `ShopChaos` is a `next/link` wrapper around `.riot-plate`. That wrapper
+is not incidental: it lands between `.riot-slot`, which owns the `perspective`,
+and `.riot-plate`, which owns the `preserve-3d` and the tilt — so without
+`transform-style: preserve-3d` of its own it flattens the entire card, killing
+the tilt, the echo's Z offset and the floating tags in one go.
+
+Verified rather than assumed. Measured against the full 3D maths (perspective
+x rotation x scale) all five cards match prediction to **0.01px**, and forcing
+the wrapper to `transform-style: flat` visibly shrinks every card — e.g. CAT. 04
+from 521.7px wide to 462.9px. The `preserve-3d` is load-bearing.
+
+*(A first pass at that check reported all five cards "flat". That was the test
+being wrong, not the page: the formula ignored `.riot-slot`'s 4–9° rotation,
+which inflates the axis-aligned bounding box. The measured values were *larger*
+than predicted, not equal to `--scale`, which is the opposite of what flattening
+looks like.)*
+
+**`/shop/[slug]`** — one page per catalogue slot, slug is the design's `id`.
+`generateStaticParams` prerenders all five; an unknown slug 404s rather than
+rendering an empty template. Chrome comes from `PageShell`, so the header, nav
+and footer match the other routes; the two-column layout goes in `bleed`
+because it is wider than the shell's 36rem prose measure. `PageShell`'s
+`children` became optional — this page carries its copy inside the bleed, and
+an empty `.page-body` would only open a gap under the title.
+
+- **Gallery** — one large frame plus a thumbnail row. Frames are square with
+  `object-fit: contain` because the three views don't share a ratio: the cutouts
+  are 1.19:1 and the model shot is 0.75:1. A square is the one frame that holds
+  both without cropping the garment or stranding it in empty void, and real
+  photography can drop in later at any ratio.
+- **Graceful degradation** — `back` and `model` are optional on `Design`. Only
+  CAT. 01 has them, so the other four render a single frame and no thumbnail
+  row rather than a broken tab strip.
+- **Specification** — Material / Fit / Edition as dotted-leader spec rows, the
+  same micro-type convention as the corner marks. The cart button is
+  `.view-toggle` at product scale, so the one button here is visibly the same
+  species as the one in the hero.
+
+**The cart button is honest about being inert.** There is no cart system, so it
+carries `aria-disabled="true"` and a line underneath pointing at `hi@noax.mn`,
+rather than looking live and swallowing the click. Wire it up and delete the
+note.
+
+**New assets** — `public/shirts/design-1-back.png` (1120x944) and
+`design-1-model.png` (896x1195), dropped in as provided. Both carry a small
+generator watermark in the corner; worth a clean re-export before launch.
+
+---
+
+## v15 — product page fixes
+
+- **Origin row.** `Design` gains `origin`; the whole run is `Mongolia`, kept
+  per-design rather than hardcoded in the page. Appended after Edition so no
+  existing row moves.
+- **Uniform thumbnails.** The boxes were already the same square — what looked
+  ragged was `object-fit: contain` letterboxing the 0.75:1 model shot into a
+  tall sliver between two nearly-full 1.19:1 cutouts. Now `cover` on all three.
+  Measured: 184.9 x 184.9 each, spread 0.02px. The trade is that the cutouts
+  lose ~8% a side, clipping the sleeve tips in the thumbnail — the main frame
+  still uses `contain`, so the whole garment is always visible there.
+- **Arrow navigation.** Prev/next circles inside the main frame, wrapping both
+  ways: Front → Back → Worn → Front, and backwards from Front to Worn. The
+  hero's `.arrow-next` treatment, with one deviation — these sit on the
+  photographs rather than the void, including the model shot's white studio
+  wall, so they carry a scrim. The `[ WORN ]` caption got the same scrim for
+  the same reason; on white, `--ash` was barely there.
+- **Size selector** between description and cart. S/M/L/XL/XXL as real radios
+  in a `fieldset`, visually hidden and drawn as boxes — a row of `<button>`s
+  would have looked identical and been wrong, since radios give single
+  selection, arrow-key movement and the right screen-reader announcement for
+  free. Selected is `--ember`, the same signal `.pip-on` and
+  `.product-thumb-on` already use. Verified: exactly one selection at a time,
+  `rgb(201, 96, 26)` on the chosen box.
+- **The note now reports the nearest blocker** — "Choose a size to continue."
+  until one is picked, then the checkout-isn't-live line. The button stays
+  `aria-disabled` throughout, because there is still no cart behind it.
+
+Stock is not modelled; every size is offered. When inventory exists, the
+unavailable ones want `disabled` on the input, not a missing box.
+
+**Follow-up: the main frame wasn't actually square.** Asked to make the model
+shot smaller, the cause turned out to be a layout bug rather than a size
+choice. `.product-frame` is a flex item in a column and `.product-frame img` is
+a grid item, so both take an *automatic minimum size* from their content — and
+for the 0.75:1 model shot that is taller than the square they were told to be.
+`aspect-ratio: 1 / 1` lost to it at both levels: the frame rendered 587x782
+against the cutouts' 587x587, and shoved the thumbnail row 195px down the page
+whenever that view was selected.
+
+`min-height: 0` on both restores the square and lets `object-fit: contain` do
+its job. Measured after: all three views 587x587, thumbnails fixed at the same
+offset, and the model shot drawn at 438x585 instead of 585x780 — smaller, whole,
+and consistent with the other two. Note the frame needed the fix *and* the image
+did; fixing only the frame left the image at 585x780 with `overflow: hidden`
+quietly cropping the model's head and feet. The thumbnails were never affected,
+because an explicit `aspect-ratio` replaces the natural ratio in that
+calculation.
