@@ -71,12 +71,16 @@ export const MATERIAL_COPY = {
  * the shapes; it does not replace them, and the shape field is untouched.
  *
  * `href` is what decides how an item renders in `SiteFooter`: internal routes
- * become `next/link`, `mailto:` becomes a plain anchor, and an item with no
- * href stays text rather than pretending to be a link.
+ * become `next/link`, `http(s)` opens in a new tab, `mailto:` becomes a plain
+ * anchor, and an item with no href stays text rather than pretending to be a
+ * link.
  */
 export interface FooterItem {
   label: string;
-  /** Internal route, a `mailto:`, or omitted to render as plain text. */
+  /**
+   * Internal route, an `https://` URL, a `mailto:`, or omitted to render as
+   * plain text.
+   */
   href?: string;
 }
 
@@ -90,12 +94,19 @@ export interface FooterColumn {
    and can't be read. */
 export const FOOTER_COPY: {
   blurb: string;
+  /**
+   * The spec line under the brand blurb, drawn with a dotted leader between
+   * key and value — the same treatment as the `Origin / Mongolia` row in the
+   * product spec list on `/shop/[slug]`.
+   */
+  origin: { key: string; value: string };
   columns: FooterColumn[];
   legal: string;
   mark: string;
 } = {
   blurb:
     "Exploring the tactile relationship between architectural concepts and textile engineering. Every piece is a considered study in permanence and minimalist form.",
+  origin: { key: "Designed in", value: "Mongolia" },
   columns: [
     {
       tag: "Navigation",
@@ -109,8 +120,19 @@ export const FOOTER_COPY: {
     {
       tag: "Correspondence",
       items: [
-        { label: "hi@noax.mn", href: "mailto:hi@noax.mn" },
+        { label: "noaxthebest@gmail.com", href: "mailto:noaxthebest@gmail.com" },
+        { label: "@noaxthebest", href: "https://instagram.com/noaxthebest" },
         { label: "Ulaanbaatar, MN" },
+      ],
+    },
+    /* Its own column rather than appended to Navigation: these are obligations,
+       not places to go, and the grid is `auto-fit` so a third tag costs nothing
+       — it drops to a second row on narrow screens. */
+    {
+      tag: "Legal",
+      items: [
+        { label: "Terms of Service", href: "/terms" },
+        { label: "Privacy Policy", href: "/privacy" },
       ],
     },
   ],

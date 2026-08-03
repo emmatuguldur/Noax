@@ -804,8 +804,7 @@
 --------------------------------------------------------------------------- */
 .material {
   position: relative;
-  max-width: 80
-  rem;
+  max-width: 88rem;
   margin: 0 auto;
   /* The bottom value used to be 0 because the pull-quote block carried the
      space down to the footer. With that gone the section has to hold its own
@@ -931,7 +930,7 @@
    as text links — a duplicate of that system, not a replacement for it.
 --------------------------------------------------------------------------- */
 .site-foot {
-  max-width: 82rem;
+  max-width: 88rem;
   margin: 0 auto;
   /* The bottom padding clears the fixed corner marks, which sit ~1.5rem off the
      viewport floor and would otherwise land on top of the bottom bar at the end
@@ -942,7 +941,7 @@
 .site-foot-main {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: clamp(2.5rem, 6vw, 4rem);
+  gap: clamp(0rem, 5vw, 0rem);
 }
 
 @media (min-width: 768px) {
@@ -967,10 +966,38 @@
   color: var(--paper-dim);
 }
 
+/* The spec line under the blurb — same dotted-leader treatment as the `Origin`
+   row in `.product-spec`, held to a short measure so the leader stays a hairline
+   between two words rather than running the width of the brand column. */
+.site-foot-origin {
+  margin-top: clamp(1.5rem, 3.5vh, 2rem);
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  max-width: 17rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+.site-foot-leader {
+  flex: 1 1 auto;
+  /* Sits on the baseline the two words share, not under their descenders. */
+  transform: translateY(-0.25em);
+  border-bottom: 1px dotted rgba(255, 255, 255, 0.15);
+}
+
+.site-foot-origin-value {
+  flex: 0 0 auto;
+  color: var(--paper-dim);
+}
+
 .site-foot-cols {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
-  gap: clamp(2rem, 5vw, 3rem);
+  gap: clamp(2rem, 5vw, 4rem);
 }
 
 .site-foot-tag {
@@ -1108,6 +1135,21 @@
   font-size: 1rem;
   line-height: 1.7;
   color: rgba(237, 233, 226, 0.62);
+}
+
+/* Construction notice for the two unwritten legal pages. Deliberately loud for
+   this palette — ember on a dotted rule — because it has to be impossible to
+   miss on the way to launch. It goes when the real text lands; see
+   `/terms` and `/privacy`. */
+.page-placeholder {
+  padding: 0.9rem 1.1rem;
+  border: 1px dotted var(--ember);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  line-height: 1.9;
+  text-transform: uppercase;
+  color: var(--ember);
 }
 
 .page-foot {
