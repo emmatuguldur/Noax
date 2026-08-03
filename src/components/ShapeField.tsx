@@ -12,7 +12,19 @@ import { useIsCompact, usePrefersReducedMotion } from "@/lib/hooks";
  * On load they sit scattered around the shirt at their loose hero anchors. As
  * you scroll they converge — smoothly, tied to scroll — into a centered,
  * evenly-spaced row ("Four ways in"), labels fading in as they line up, and
- * rest there as the destination.
+ * hold there as the destination.
+ *
+ * The overlay is *pinned*, not permanently fixed: `.shape-field` is
+ * `position: sticky` inside `.shape-track` (see `page.tsx`), so it holds at the
+ * top of the viewport for the length of the track and then releases and scrolls
+ * away with the page, like any other section. Sticky containment guarantees its
+ * box can never extend past the track's bottom edge, which is exactly where the
+ * material section starts — so it structurally cannot overlap what follows.
+ * v12 needed an opacity fade plus `inert` to fake that; both are gone.
+ *
+ * Everything here writes viewport-space numbers, and that stays correct through
+ * the release: while pinned, the field's box *is* the viewport, and once it
+ * releases the shapes travel with the box they're positioned inside.
  *
  * On desktop the shapes also drift on independent depths in response to the
  * cursor (a small parallax), layered on top of the idle rotation — strongest
@@ -150,26 +162,32 @@ export default function ShapeField() {
   }, []);
 
   return (
-    <>
-      {/* Scroll distance to reach and hold the assembled row. */}
-      <div className="shape-spacer" aria-hidden="true" />
+    <nav ref={fieldRef} className="shape-field" aria-label="Explore">
+      <p className="shape-field-eyebrow">Four ways in</p>
 
-      <nav ref={fieldRef} className="shape-field" aria-label="Explore">
-        <p className="shape-field-eyebrow">Four ways in</p>
-        {NAV_ITEMS.map((item, i) => (
-          <NavShape
-            key={item.id}
-            item={item}
-            size={compact ? COMPACT.size : DESKTOP.size}
-            shellRef={(el) => {
-              shellRefs.current[i] = el;
-            }}
-            plateRef={(el) => {
-              plateRefs.current[i] = el;
-            }}
-          />
-        ))}
-      </nav>
-    </>
+      {/* Lowers itself into the room as the shapes line up. Opacity and drop
+          are both read from `--assembled` in CSS — the same 0..1 the eyebrow
+          uses — so it costs nothing per frame and can't drift out of sync
+          with the row. The sway is on the artwork inside, because this
+          element's transform is already spoken for by the drop. */}
+      <span className="shape-spider" aria-hidden="true">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/decor/spider-hanging.png" alt="" className="shape-spider-art" />
+      </span>
+
+      {NAV_ITEMS.map((item, i) => (
+        <NavShape
+          key={item.id}
+          item={item}
+          size={compact ? COMPACT.size : DESKTOP.size}
+          shellRef={(el) => {
+            shellRefs.current[i] = el;
+          }}
+          plateRef={(el) => {
+            plateRefs.current[i] = el;
+          }}
+        />
+      ))}
+    </nav>
   );
 }

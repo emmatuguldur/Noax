@@ -5,8 +5,8 @@
  *
  * Every string below is a stand-in so you can see the page working at full
  * strength. The *structure* is the deliverable — the rhythm of a short opening
- * beat, a two-part statement that lands in two breaths, and a dry spec line
- * underneath. Keep that shape and swap the words for your own voice.
+ * beat, a two-part statement that lands in two breaths, and dry spec lines
+ * against it. Keep that shape and swap the words for your own voice.
  *
  * I wrote these from facts already true in your codebase rather than inventing
  * a brand personality for you:
@@ -26,20 +26,94 @@ export const HERO_COPY = {
   overline: "Printed in small batches",
 
   /**
-   * The statement. Deliberately two lines: the first sets up, the second
-   * lands, and they fade in one after the other as the shirt resolves. If you
-   * rewrite it, keep the two-part setup/payoff shape — the choreography is
-   * built around the pause between them.
-   */
-  statementLead: "The ink doesn't sit on the cloth.",
-  statementTurn: "It sinks in.",
-
-  /**
-   * Dry, factual counterweight to the statement above. Specs, not poetry —
-   * the contrast is what keeps the statement from sounding precious.
+   * Dry, factual line under the shirt. Specs, not poetry. v12 moved the
+   * two-part statement that used to sit above this down into the material
+   * section, where it has fabric to be about — see `MATERIAL_COPY.quote*`.
    */
   spec: "Five studies · editions of one hundred · never reprinted",
 
   /** The nudge at the bottom of the hero. */
   scrollHint: "Keep going",
 } as const;
+
+/**
+ * The material section. Same rule as above: placeholder words, real structure.
+ * The shape to keep is heading → one paragraph of process detail → two hard
+ * numbers, with the plates carrying the evidence alongside.
+ */
+export const MATERIAL_COPY = {
+  eyebrow: "Material study",
+  title: "Tactile permanence.",
+  body:
+    "Every garment is the result of rigorous textile testing. We use 380 GSM organic cotton, double-dyed to a depth of black that refuses to fade. The weight gives a structural silhouette that holds its line through movement.",
+
+  /**
+   * Two hard numbers against the prose. `unit` is the only place the ember
+   * accent appears in this section, so keep it to a symbol or a word or two.
+   */
+  stats: [
+    { value: "380", unit: "", label: "Grams per square metre" },
+    { value: "100", unit: "%", label: "Organic combed cotton" },
+  ],
+
+  figures: [
+    { src: "/fabric/texture-placeholder-1.png", alt: "Macro detail of the woven cotton face" },
+    { src: "/fabric/texture-placeholder-2.png", alt: "Macro detail of a woven garment label and stitching" },
+  ],
+} as const;
+
+/**
+ * Closing content.
+ *
+ * The navigation column deliberately repeats the four shape destinations as
+ * plain text links — the ordinary footer pattern, and the accessible way to
+ * reach those pages without working a scroll-driven animation. It duplicates
+ * the shapes; it does not replace them, and the shape field is untouched.
+ *
+ * `href` is what decides how an item renders in `SiteFooter`: internal routes
+ * become `next/link`, `mailto:` becomes a plain anchor, and an item with no
+ * href stays text rather than pretending to be a link.
+ */
+export interface FooterItem {
+  label: string;
+  /** Internal route, a `mailto:`, or omitted to render as plain text. */
+  href?: string;
+}
+
+export interface FooterColumn {
+  tag: string;
+  items: FooterItem[];
+}
+
+/* Annotated rather than `as const`: one item deliberately has no `href`, and
+   under `as const` that widens to a union where `href` isn't a property at all
+   and can't be read. */
+export const FOOTER_COPY: {
+  blurb: string;
+  columns: FooterColumn[];
+  legal: string;
+  mark: string;
+} = {
+  blurb:
+    "Exploring the tactile relationship between architectural concepts and textile engineering. Every piece is a considered study in permanence and minimalist form.",
+  columns: [
+    {
+      tag: "Navigation",
+      items: [
+        { label: "About", href: "/about" },
+        { label: "Contact", href: "/contact" },
+        { label: "Shop", href: "/shop" },
+        { label: "Story", href: "/story" },
+      ],
+    },
+    {
+      tag: "Correspondence",
+      items: [
+        { label: "hi@noax.mn", href: "mailto:hi@noax.mn" },
+        { label: "Ulaanbaatar, MN" },
+      ],
+    },
+  ],
+  legal: "© 2026 N.O.A.X — All rights reserved",
+  mark: "Designed for the archive",
+};

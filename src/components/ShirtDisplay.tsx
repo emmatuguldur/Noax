@@ -9,46 +9,54 @@ import { useIsCompact, usePrefersReducedMotion } from "@/lib/hooks";
 /**
  * The arrival.
  *
- * v8 turns the ASCII from a destination into an entrance. On first paint the
- * grid types itself on, holds a beat, then dissolves — and the photograph it
- * was sampled from is underneath it the whole time. The machine reading of the
- * garment resolves into the garment. That single gesture is the thesis, and it
- * also fixes the thing v2–v7 got backwards: the one real, photographed, tactile
- * asset on the page is now what you're left looking at, instead of something
- * you had to go and click "View" to find.
+ * Every design enters the same way: the grid types itself on, holds a beat,
+ * then dissolves — and the photograph it was sampled from is underneath it the
+ * whole time. The machine reading of the garment resolves into the garment.
+ * That single gesture is the thesis, and nobody has to click to see it.
  *
- * The "View" toggle survives as the way back — press it and the grid retypes.
- * Going forward to the photo replays the dissolve; going back is immediate,
- * because a 1.3s ceremony every time you poke a button stops being cinema and
- * starts being a wait.
+ * It plays on load and again on every design the arrow brings in, so the
+ * catalogue reads as a series of arrivals rather than one and then a stack of
+ * stills. It does *not* replay when the visitor works the toggle themselves —
+ * see `autoReveal`.
  *
- * Timings are mirrored by the hero's CSS choreography (`--t-*` in globals.css).
- * Change them here and change them there.
+ * The toggle survives as the way back: press it and the grid retypes. Going
+ * forward again replays the dissolve; going back is immediate, because a 1.3s
+ * ceremony every time you poke a button stops being cinema and starts being a
+ * wait.
  */
 type Mode = "ascii" | "photo";
 
 const SLIDE_MS = 620;
 
-/** Type-on is slowed for the intro; the toggle uses the renderer's default. */
-const INTRO_TYPE_MS = 900;
-/** The beat where the finished grid just sits there before it lets go. */
-const INTRO_HOLD_MS = 520;
 /**
- * Hard ceiling on the intro. The dissolve can only run once the ASCII grid has
- * been sampled, which waits on the image decoding *and* `document.fonts.ready`
- * — so a cold load, a slow network, or an image that 404s can all leave the
- * ceremony with nothing to play. Without this the stage would sit empty
- * forever, since neither layer is showing mid-dissolve. Lands the photograph
- * regardless; the reveal is a nicety, the product is not.
+ * How long a grid sits there before it lets go. The renderer's default type-on
+ * is 420ms, so this leaves the finished grid complete and readable for roughly
+ * half a second — long enough to be a beat, short enough not to be a wait.
  */
-const INTRO_CEILING_MS = 5200;
+const AUTO_REVEAL_MS = 1000;
+/**
+ * Ceiling on the whole arrival, and the only reason the photograph ever appears
+ * without either a timer or a click behind it. The dissolve can only run once
+ * the grid has been sampled, which waits on the image decoding *and*
+ * `document.fonts.ready` — so a cold load, a slow network, or a photo that 404s
+ * leaves the ceremony with nothing to play, and the stage showing nothing at
+ * all: the ASCII layer is transparent until it has a grid, and the photograph
+ * beneath is held at zero for as long as ASCII is the active mode. Lands the
+ * garment regardless. The rendering is a nicety; the product is not.
+ */
+const REVEAL_CEILING_MS = 5200;
 
 export default function ShirtDisplay() {
   const [index, setIndex] = useState(0);
   const [outgoing, setOutgoing] = useState<number | null>(null);
   const [mode, setMode] = useState<Mode>("ascii");
-  const [introRunning, setIntroRunning] = useState(true);
   const [dissolving, setDissolving] = useState(false);
+  /**
+   * True while an arrival is pending — set on mount and again on every design
+   * change, cleared the moment the visitor drives the toggle themselves. Only
+   * an arrival reveals itself; once you've taken the control it stays yours.
+   */
+  const [autoReveal, setAutoReveal] = useState(true);
   const slideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const stageRef = useRef<HTMLDivElement | null>(null);
 
@@ -63,11 +71,10 @@ export default function ShirtDisplay() {
   const next = DESIGNS[(index + 1) % DESIGNS.length];
   const asciiActive = mode === "ascii";
 
-  /** Lands on the photograph and stops the ceremony, from wherever it was. */
+  /** Lands on the photograph, from wherever the stage was. */
   const settle = useCallback(() => {
     setDissolving(false);
     setMode("photo");
-    setIntroRunning(false);
     stageRef.current?.style.setProperty("--dissolve", "1");
   }, []);
 
@@ -81,40 +88,48 @@ export default function ShirtDisplay() {
     stageRef.current?.style.setProperty("--dissolve", String(progress));
   }, []);
 
-  // The intro clock. `usePrefersReducedMotion` resolves false-then-true after
-  // mount, so this re-runs on that flip and bails straight to the photograph.
+  /**
+   * The arrival clock. Re-arms on `index` as well as on `autoReveal`, because
+   * cycling designs leaves both `mode` and the flag already where this effect
+   * wants them — without `index` in the deps the second design would sit on its
+   * grid forever.
+   *
+   * Nothing cancels this but the visitor taking the toggle. Hovering the grid
+   * to push the characters around is interaction with the *rendering*, not a
+   * request to keep it, so the physics and this clock simply run concurrently.
+   */
   useEffect(() => {
-    if (!introRunning) return;
+    if (!autoReveal || mode !== "ascii") return;
     if (reduceMotion) {
-      settle();
+      settle(); // the whole gesture is motion; there's nothing to show instead
       return;
     }
-    const timer = setTimeout(() => setDissolving(true), INTRO_TYPE_MS + INTRO_HOLD_MS);
-    const guard = setTimeout(settle, INTRO_CEILING_MS);
+    const timer = setTimeout(() => setDissolving(true), AUTO_REVEAL_MS);
+    const guard = setTimeout(settle, REVEAL_CEILING_MS);
     return () => {
       clearTimeout(timer);
       clearTimeout(guard);
     };
-  }, [introRunning, reduceMotion, settle]);
+  }, [autoReveal, mode, index, reduceMotion, settle]);
 
-  // Nobody should be held hostage by an intro. Any intent to interact — click,
-  // key, scroll — lands it immediately.
+  /**
+   * `settle` parks `--dissolve` at 1, and the property outlives the transition
+   * that wrote it. Re-zero it on the way back into ASCII: the next forward
+   * dissolve sets `dissolving` a frame before the rAF loop writes its first
+   * progress value, and a stale 1 in that gap flashes the whole photograph.
+   */
   useEffect(() => {
-    if (!introRunning) return;
-    const skip = () => settle();
-    window.addEventListener("pointerdown", skip);
-    window.addEventListener("keydown", skip);
-    window.addEventListener("wheel", skip, { passive: true });
-    return () => {
-      window.removeEventListener("pointerdown", skip);
-      window.removeEventListener("keydown", skip);
-      window.removeEventListener("wheel", skip);
-    };
-  }, [introRunning, settle]);
+    if (mode === "ascii") stageRef.current?.style.setProperty("--dissolve", "0");
+  }, [mode, index]);
 
   const advance = useCallback(() => {
     setOutgoing(index);
     setIndex((current) => (current + 1) % DESIGNS.length);
+    // A new design arrives the way the first one did — back to the grid, and
+    // the clock above re-arms off the index change.
+    setMode("ascii");
+    setDissolving(false);
+    setAutoReveal(true);
     if (slideTimer.current) clearTimeout(slideTimer.current);
     slideTimer.current = setTimeout(() => setOutgoing(null), reduceMotion ? 0 : SLIDE_MS);
   }, [index, reduceMotion]);
@@ -125,21 +140,14 @@ export default function ShirtDisplay() {
     };
   }, []);
 
-  // The window-level skip listener above fires on `pointerdown`, which lands a
-  // whole render before the button's `click`. Reading these refs instead of the
-  // render closure means the toggle always sees the state the skip just wrote,
-  // rather than acting on what was true when the button was last painted.
-  const modeRef = useRef(mode);
-  modeRef.current = mode;
-  const introRef = useRef(introRunning);
-  introRef.current = introRunning;
-
+  // Nothing outside this component writes `mode`, so the render closure is a
+  // safe read — `toggle` is rebuilt every render and always sees current state.
   const toggle = () => {
-    if (introRef.current) {
-      settle(); // mid-ceremony, "View" just means "show me it now"
-      return;
-    }
-    if (modeRef.current === "photo") {
+    // Taking the control keeps it: from here the stage waits to be told, until
+    // the arrow brings in a design that hasn't been seen yet.
+    setAutoReveal(false);
+
+    if (mode === "photo") {
       setMode("ascii"); // straight back to the grid, and it retypes
       return;
     }
@@ -199,7 +207,6 @@ export default function ShirtDisplay() {
             active={asciiActive}
             cols={cols}
             className="ascii-layer"
-            revealMs={introRunning ? INTRO_TYPE_MS : undefined}
             dissolving={dissolving}
             onDissolveProgress={onDissolveProgress}
             onDissolveEnd={settle}
