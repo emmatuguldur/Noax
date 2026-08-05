@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import gsap from "gsap";
 
@@ -11,17 +11,19 @@ import { useCoarsePointer, usePrefersReducedMotion } from "@/lib/hooks";
 /**
  * The shop as a ransacked contact sheet.
  *
- * Two states, one control — the same grammar as the hero's ASCII/View toggle.
+ * The catalogue thrown across the table: cards sit on a scattered collage —
+ * rotated, offset, overlapping, on five depth layers. Each card is a real 3D
+ * plate (perspective on the slot, preserve-3d on the plate) that tilts toward
+ * the cursor, with an ember echo pushed back in Z and the accession tags
+ * floating in front of it. Tilt the card and the layers separate — that
+ * parallax is the mock-up.
  *
- *   RIOT  — the catalogue thrown across the table. Cards sit on a scattered
- *           collage: rotated, offset, overlapping, on five depth layers. Each
- *           card is a real 3D plate (perspective on the slot, preserve-3d on
- *           the plate) that tilts toward the cursor, with an ember echo pushed
- *           back in Z and the accession tags floating in front of it. Tilt the
- *           card and the layers separate — that parallax is the mock-up.
- *   ORDER  — every scatter variable collapses to zero and it settles back into
- *           the archival grid the route shipped with. Nothing is destroyed;
- *           the chaos is a transform you can undo.
+ * This used to be one of two states, switched by a RIOT/ORDER button in the bar
+ * — ORDER collapsed every scatter variable to zero and settled the cards back
+ * into an archival grid. That control was replaced by the category nav, so the
+ * field is now permanently scattered and `.riot-on` is always on. The ORDER
+ * rules in globals.css (`.riot:not(.riot-on)`) are left intact and still work;
+ * they are simply unreachable until something toggles that class again.
  *
  * Scatter is *deterministic*, never Math.random(): a seeded integer hash keyed
  * by index, computed at module scope so server and client render byte-identical
@@ -87,8 +89,6 @@ const SCATTER = DESIGNS.map((design, i) => {
 const TILT = 15;
 
 export default function ShopChaos() {
-  const [riot, setRiot] = useState(true);
-
   const reduceMotion = usePrefersReducedMotion();
   const coarse = useCoarsePointer();
 
@@ -98,8 +98,9 @@ export default function ShopChaos() {
   >([]);
 
   // Tilt is a pointer affordance: pointless on touch, unwanted under reduced
-  // motion. In both cases we simply never build the tweens.
-  const tiltable = !reduceMotion && !coarse && riot;
+  // motion. In both cases we simply never build the tweens. (It used to also
+  // require the riot state; the field no longer leaves it.)
+  const tiltable = !reduceMotion && !coarse;
 
   useEffect(() => {
     if (!tiltable) {
@@ -148,22 +149,26 @@ export default function ShopChaos() {
   );
 
   return (
-    <section className={riot ? "riot riot-on" : "riot"} aria-label="Catalogue">
-      <div className="riot-bar">
-        <button
-          type="button"
-          onClick={() => setRiot((v) => !v)}
-          className="riot-toggle"
-          aria-pressed={riot}
-        >
-          {riot ? "Order" : "Riot"}
-        </button>
-        <p className="riot-hint">
-          {riot
-            ? "Five studies, thrown across the table."
-            : "Five studies, filed back into the drawer."}
-        </p>
-      </div>
+    <section className="riot riot-on" aria-label="Catalogue">
+      {/* Category nav, in the bar the RIOT/ORDER control used to hold.
+          T-shirts is the page you are on, so it is text rather than a link —
+          the same rule `SiteFooter` applies to its own current entries.
+
+          Pants and Beanies point at routes that do not exist. `/shop/[slug]`
+          calls `notFound()` for any slug outside `DESIGNS`, so both land on the
+          real 404 with a 404 status rather than an empty page. Prefetch is off:
+          there is no point warming a response we know is a miss. */}
+      <nav className="riot-bar" aria-label="Categories">
+        <span className="riot-tab riot-tab-on" aria-current="page">
+          T-shirts
+        </span>
+        <Link href="/shop/pants" className="riot-tab" prefetch={false}>
+          Pants
+        </Link>
+        <Link href="/shop/beanies" className="riot-tab" prefetch={false}>
+          Beanies
+        </Link>
+      </nav>
 
       <Ticker />
 

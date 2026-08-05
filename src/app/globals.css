@@ -1104,7 +1104,7 @@
   max-width: 52rem;
   width: 100%;
   margin: 0 auto;
-  padding: clamp(3.5rem, 12vh, 8rem) clamp(1rem, 5vw, 4rem);
+  padding: clamp(3.5rem, 10vh, 8rem) clamp(1rem, 5vw, 4rem);
 }
 
 .page-eyebrow {
@@ -1876,9 +1876,13 @@
   margin-left: calc(50% - 50vw);
 }
 
+/* Top margin pulled in from `clamp(2.5rem, 6vh, 4rem)` so the category row
+   clears the fold instead of sitting just under it. Only this margin moved —
+   `.riot-bar` keeps its own bottom margin, so everything below the row holds
+   its existing spacing exactly. */
 .riot {
   position: relative;
-  margin-top: clamp(2.5rem, 6vh, 4rem);
+  margin-top: clamp(1rem, 2.5vh, 1.75rem);
   padding: 0 clamp(1rem, 5vw, 4rem);
 }
 
@@ -1887,11 +1891,16 @@
   align-items: baseline;
   gap: 1.25rem;
   flex-wrap: wrap;
-  margin-bottom: 1.5rem;
+  margin-bottom: 3rem;
 }
 
-.riot-toggle {
-  /* 44px min target — this is the only control in the section. */
+/* Category chips. Same shape the RIOT/ORDER control had — mono, bordered,
+   ember on hover — so the row reads as the same species as `.product-cart` and
+   `.size-opt` elsewhere on the site. */
+.riot-tab {
+  display: inline-grid;
+  place-items: center;
+  /* 44px min target, as the control this replaced had. */
   min-height: 44px;
   padding: 0.5rem 1.6rem;
   background: transparent;
@@ -1901,21 +1910,30 @@
   font-size: 11px;
   letter-spacing: 0.28em;
   text-transform: uppercase;
-  cursor: pointer;
-  transition: border-color 220ms ease, color 220ms ease, background 220ms ease;
+  text-decoration: none;
+  transition: border-color 220ms ease, color 220ms ease;
 }
 
-.riot-toggle:hover {
+/* Hover belongs to the ones you can actually go to. */
+a.riot-tab:hover {
   color: var(--ember);
   border-color: var(--ember);
 }
 
-.riot-hint {
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--ash);
+/* The category you're on. Ember, the same "this is the one you're on" signal
+   `.size-opt-on` and `.product-thumb-on` already use. */
+.riot-tab-on {
+  border-color: var(--ember);
+  color: var(--ember);
+}
+
+/* Three chips at full tracking overflow a narrow phone and wrap to two lines.
+   Tightening the padding and tracking keeps them on one. */
+@media (max-width: 480px) {
+  .riot-tab {
+    padding: 0.5rem 0.9rem;
+    letter-spacing: 0.16em;
+  }
 }
 
 /* --- Ticker ------------------------------------------------------------- */
@@ -1942,7 +1960,8 @@
 
 .riot-ticker-rev .riot-ticker-track { animation-direction: reverse; }
 
-/* Only the riot state runs the ticker; ORDER holds it still. */
+/* Only the riot state runs the ticker; ORDER holds it still. Unreachable while
+   the category nav occupies the bar — see the note in `ShopChaos`. */
 .riot:not(.riot-on) .riot-ticker-track { animation-play-state: paused; }
 
 @keyframes riot-scroll {
