@@ -20,9 +20,14 @@ export interface Design {
   /** Long-form copy for the product page. Placeholder — overwrite. */
   description: string;
   /**
-   * Extra views for the product gallery, both optional: only CAT. 01 has been
-   * photographed. The gallery renders whatever exists, so a slot with neither
-   * simply shows its front view alone rather than a broken frame.
+   * Extra views for the product gallery, both optional — CAT. 01..03 have been
+   * photographed, 04 and 05 have not. The gallery renders whatever exists, so a
+   * slot with neither simply shows its front view alone rather than a broken
+   * frame.
+   *
+   * That fallback is quiet by design, which cuts both ways: a slot whose files
+   * are on disk but not named here looks finished and just loses its thumbnails
+   * and arrows. If a gallery is missing, check these two keys first.
    */
   back?: string;
   model?: string;
@@ -30,10 +35,16 @@ export interface Design {
 
 /**
  * The prints cycled by the arrow control in the hero, catalogued like exhibition
- * pieces. The metadata renders as bracketed accession tags. Only CAT. 01 is a
- * real, photographed design right now — its titling is placeholder copy to
- * overwrite. CAT. 02..05 are reserved slots showing the sample until their own
- * photography lands; drop a real image at `public/shirts/design-N.png`.
+ * pieces. The metadata renders as bracketed accession tags.
+ *
+ * CAT. 01..03 are real, photographed designs with all three views. Their titling
+ * is still placeholder copy to overwrite — 02 and 03 in particular carry the
+ * name "Forthcoming" and an edition of "—" while showing finished photography,
+ * which reads as a mistake on `/shop` and in the product page's title tag.
+ *
+ * CAT. 04..05 are reserved slots showing the sample until their own photography
+ * lands; drop a real image at `public/shirts/design-N.png` and name its `back`
+ * and `model` files here, or the gallery silently stays a single frame.
  */
 const MEDIUM = "ORGANIC COTTON / 380 GSM";
 /** The whole run is cut and printed at the Ulaanbaatar studio. */
@@ -73,6 +84,8 @@ export const DESIGNS: Design[] = [
     edition: "—",
     medium: MEDIUM,
     photo: "/shirts/design-2.png",
+    back: "/shirts/design-2-back.png",
+    model: "/shirts/design-2-model.png",
     blurb: "Next study in the run — photography to come.",
     ...FORTHCOMING,
   },
@@ -84,6 +97,8 @@ export const DESIGNS: Design[] = [
     edition: "—",
     medium: MEDIUM,
     photo: "/shirts/design-3.png",
+    back: "/shirts/design-3-back.png",
+    model: "/shirts/design-3-model.png",
     blurb: "Next study in the run — photography to come.",
     ...FORTHCOMING,
   },

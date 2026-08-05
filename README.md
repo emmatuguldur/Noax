@@ -60,10 +60,16 @@ slots.
 ## Assets & placeholders — replace these
 - `public/shirts/design-1.png` is the real shirt (transparent cutout), joined in
   v14 by `design-1-back.png` and `design-1-model.png` — the three views the
-  product gallery shows. `design-2..5.png` are the **same image as stand-ins**
+  product gallery shows. **Designs 2 and 3 now have all three views too.**
+  `design-4.png` and `design-5.png` are still the **same image as stand-ins**
   with no back or model shot; drop real cutouts in and update
   `src/data/designs.ts`. The gallery renders whatever views exist, so adding
-  `back` / `model` to a slot is all that's needed to give it a full set.
+  `back` / `model` to a slot is all that's needed to give it a full set — and
+  a slot whose files are on disk but *not* named in `designs.ts` shows a single
+  frame with no thumbnails or arrows, which is exactly what 2 and 3 did.
+- `public/shirts/design-2-switch.png` and `design-2-switch-back.png` are on disk
+  but **nothing references them** — there's no colourway/variant field on
+  `Design`. Either wire them up or delete them.
 - In `src/data/designs.ts`, **NX-01 "Interference"** is a name/blurb I wrote —
   overwrite it. NX-02..05 read "Forthcoming" until their photos land.
 - Shape art lives in `public/shapes/` (star = About, diamond = Shop,
