@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import PageShell from "@/components/PageShell";
 import ShopChaos from "@/components/ShopChaos";
 
-export const metadata: Metadata = { title: "Shop — N.O.A.X" };
+export const metadata: Metadata = { title: "Shop — N.O.U.X" };
 
 export default function ShopPage() {
   return (

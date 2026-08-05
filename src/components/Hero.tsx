@@ -18,7 +18,7 @@ import { HERO_COPY } from "@/data/copy";
  */
 export default function Hero() {
   return (
-    <section className="hero" aria-label="N.O.A.X">
+    <section className="hero" aria-label="N.O.U.X">
       <div className="hero-pillars" aria-hidden="true">
         <span className="pillar pillar-left" />
         <span className="pillar pillar-right" />

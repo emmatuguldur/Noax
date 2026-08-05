@@ -29,7 +29,7 @@ import { LEGAL } from "@/data/legal";
  */
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — N.O.A.X",
+  title: "Privacy Policy — N.O.U.X",
   robots: { index: false, follow: false },
 };
 
@@ -39,7 +39,7 @@ export default function PrivacyPage() {
       <p className="legal-updated">Last updated — {LEGAL.lastUpdated}</p>
 
       <p>
-        <span className="legal-term">N.O.A.X</span> (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or
+        <span className="legal-term">N.O.U.X</span> (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or
         &ldquo;our&rdquo;) is committed to protecting the privacy and security of your
         personal data. This Privacy Policy describes how we collect, process, and protect
         your information when you visit our website{" "}

@@ -26,7 +26,7 @@ import { LEGAL } from "@/data/legal";
  */
 
 export const metadata: Metadata = {
-  title: "Terms of Service — N.O.A.X",
+  title: "Terms of Service — N.O.U.X",
   robots: { index: false, follow: false },
 };
 
@@ -36,10 +36,10 @@ export default function TermsPage() {
       <p className="legal-updated">Last updated — {LEGAL.lastUpdated}</p>
 
       <p>
-        Welcome to <span className="legal-term">N.O.A.X</span> (the &ldquo;Site&rdquo;).
+        Welcome to <span className="legal-term">N.O.U.X</span> (the &ldquo;Site&rdquo;).
         These Terms of Service (&ldquo;Terms&rdquo;) govern your access to and use of our
         website, including the purchase of our limited-edition clothing and accessories
-        (the &ldquo;Products&rdquo;). N.O.A.X is a clothing brand designed in Mongolia and
+        (the &ldquo;Products&rdquo;). N.O.U.X is a clothing brand designed in Mongolia and
         operated by <LegalBlank value={LEGAL.entity} label="registered legal entity name" />{" "}
         (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;).
       </p>
@@ -112,7 +112,7 @@ export default function TermsPage() {
         <ol className="legal-clauses" role="list">
           <li className="legal-clause">
             <span className="legal-num">3.1</span>
-            <span className="legal-term">Limited editions.</span> Many N.O.A.X products are
+            <span className="legal-term">Limited editions.</span> Many N.O.U.X products are
             released in limited quantities. We do not guarantee that any product will
             remain in stock or be restocked once sold out.
           </li>
@@ -266,8 +266,8 @@ export default function TermsPage() {
           <li className="legal-clause">
             <span className="legal-num">8.1</span>
             All content on this Site, including clothing designs, graphics, logos,
-            photography, and the <span className="legal-term">N.O.A.X</span> brand mark, is
-            the exclusive property of N.O.A.X.
+            photography, and the <span className="legal-term">N.O.U.X</span> brand mark, is
+            the exclusive property of N.O.U.X.
           </li>
           <li className="legal-clause">
             <span className="legal-num">8.2</span>
@@ -289,7 +289,7 @@ export default function TermsPage() {
         <ol className="legal-clauses" role="list">
           <li className="legal-clause">
             <span className="legal-num">9.1</span>
-            To the fullest extent permitted by Mongolian law, N.O.A.X shall not be liable
+            To the fullest extent permitted by Mongolian law, N.O.U.X shall not be liable
             for any indirect or consequential damages arising from the use of the Site or
             Products.
           </li>

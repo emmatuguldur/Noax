@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * TODO(noax): EVERY `null` BELOW IS A REQUIRED FACT. FILL THEM BEFORE LAUNCH.
+ * TODO(noux): EVERY `null` BELOW IS A REQUIRED FACT. FILL THEM BEFORE LAUNCH.
  * ============================================================================
  *
  * The details `/terms` and `/privacy` both need, in one place so a change lands
@@ -62,11 +62,15 @@ export const LEGAL: LegalFacts = {
   deliveryAimags: null,
   phone: null,
 
-  /* These two match `FOOTER_COPY.columns` in `copy.ts`. Note that `/contact`
-     still advertises `hi@noax.mn` and `instagram.com/noax` — one of the two
-     pairs is wrong, and legal pages are the worst place to be reachable at an
-     address that bounces. */
+  /* These match `FOOTER_COPY.columns` in `copy.ts` and, as of the NOUX rename,
+     `/contact` and the add-to-cart note too — those two used to advertise a
+     second, different pair (`hi@noax.mn`, `instagram.com/noax`), so one of them
+     was always wrong. One pair site-wide now.
+
+     The address keeps the old spelling on purpose: it is a real Gmail account,
+     and a Gmail address cannot be renamed. The Instagram handle *was* renamed,
+     because that one can be. */
   email: "noaxthebest@gmail.com",
-  instagramHandle: "@noaxthebest",
-  instagramUrl: "https://instagram.com/noaxthebest",
+  instagramHandle: "@nouxthebest",
+  instagramUrl: "https://instagram.com/nouxthebest",
 };

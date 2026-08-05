@@ -237,7 +237,7 @@ export default function ShopChaos() {
                 <div className="riot-sheen" aria-hidden="true" />
 
                 <span className="riot-tape" aria-hidden="true">
-                  N.O.A.X
+                  N.O.U.X
                 </span>
 
                 <div className="riot-tag">

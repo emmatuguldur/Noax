@@ -8,7 +8,7 @@
 export default function BrandMark() {
   return (
     <div className="brand-mark">
-      <h1 className="brand-word">N.O.A.X</h1>
+      <h1 className="brand-word">N.O.U.X</h1>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * TODO(noax): PLACEHOLDER COPY — THESE ARE MY WORDS, NOT YOURS. OVERWRITE THEM.
+ * TODO(noux): PLACEHOLDER COPY — THESE ARE MY WORDS, NOT YOURS. OVERWRITE THEM.
  * ============================================================================
  *
  * Every string below is a stand-in so you can see the page working at full
@@ -121,7 +121,7 @@ export const FOOTER_COPY: {
       tag: "Correspondence",
       items: [
         { label: "noaxthebest@gmail.com", href: "mailto:noaxthebest@gmail.com" },
-        { label: "@noaxthebest", href: "https://instagram.com/noaxthebest" },
+        { label: "@nouxthebest", href: "https://instagram.com/nouxthebest" },
         { label: "Ulaanbaatar, MN" },
       ],
     },
@@ -136,6 +136,6 @@ export const FOOTER_COPY: {
       ],
     },
   ],
-  legal: "© 2026 N.O.A.X — All rights reserved",
+  legal: "© 2026 N.O.U.X — All rights reserved",
   mark: "Designed for the archive",
 };
