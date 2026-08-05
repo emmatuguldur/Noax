@@ -75,6 +75,13 @@ slots.
 - `public/brand/flower.png` is **no longer used** — v10 took the watermark out
   from behind the wordmark. The file is left on disk in case it comes back;
   nothing references it.
+- `src/data/legal.ts` holds the facts `/terms` and `/privacy` share. Every
+  `null` in it — registered entity, addresses, delivery windows, hosting
+  region, phone — renders as a **loud ember blank in the live page** rather
+  than being guessed. Both routes are `noindex` until they're all filled; that
+  line comes off with the last blank. The text itself covers **Mongolian law
+  and domestic delivery only** — no international shipping, customs, or
+  EU/UK consumer rights.
 - Decor lives in `public/decor/`: `cobweb-1.png` (the fine orb web, top-right
   of the hero), `cobweb-2.png` (the wide drape, top-left) and
   `spider-hanging.png` (in the shape section, not the hero). Swapping any of
