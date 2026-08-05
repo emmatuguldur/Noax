@@ -1465,6 +1465,18 @@
   min-width: 0;
   min-height: 0;
   object-fit: contain;
+  /* `contain` fits each *image* to the frame, which is not the same as fitting
+     each *garment* — the photos are cropped inconsistently, so the shirt lands
+     at a different size on every one. The per-photo correction that fixes that
+     comes in as an inline `--photo-scale` from `ProductGallery`; see
+     `src/data/photoScale.ts` for how the numbers were measured. The frame's
+     `overflow: hidden` clips what the scale-ups push out, which is empty margin
+     in every case.
+
+     Not applied to `.product-thumb img`: those are `object-fit: cover`, where a
+     scale below 1 would pull the photo off its own edges and show the frame
+     through. */
+  transform: scale(var(--photo-scale, 1));
 }
 
 /* Scrimmed for the same reason the arrows are: the model shot's white studio
@@ -1634,6 +1646,77 @@
   color: var(--paper-dim);
 }
 
+/* --- Colourway -----------------------------------------------------------
+   Only rendered for the two prints cut in a second colour — see `ColorSelect`.
+   Same construction as the sizes below: real radios, visually hidden, drawn as
+   circles instead of boxes. */
+.color-field {
+  margin-top: clamp(1.75rem, 4vh, 2.5rem);
+  padding: 0;
+  border: 0;
+}
+
+.color-legend {
+  padding: 0;
+  margin-bottom: 0.9rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+.color-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* 44px so the swatch is a real touch target — the coloured dot inside is well
+   under that on its own. The ember ring rides this box rather than the dot, so
+   the accent never touches the colour it is describing. */
+.color-opt {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: border-color 200ms ease;
+}
+
+.color-opt input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.color-opt:hover { border-color: rgba(237, 233, 226, 0.5); }
+
+/* The outline can't sit on the hidden input, so the ring wears it instead. */
+.color-opt:focus-within {
+  outline: 1px solid var(--paper);
+  outline-offset: 3px;
+}
+
+.color-opt-on { border-color: var(--ember); }
+
+/* The hairline is doing real work: without it the black swatch is a hole in the
+   void rather than a disc, and the white one glares. */
+.color-dot {
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  border: 1px solid rgba(237, 233, 226, 0.35);
+}
+
+.color-dot[data-color="black"] { background: #101012; }
+.color-dot[data-color="white"] { background: var(--paper); }
+
 /* --- Size ----------------------------------------------------------------
    Real radios, visually hidden and drawn as boxes — see `ProductPurchase`.
    Selected is ember, the same signal `.pip-on` and `.product-thumb-on` already
@@ -1642,6 +1725,12 @@
   margin-top: clamp(1.75rem, 4vh, 2.5rem);
   padding: 0;
   border: 0;
+}
+
+/* Colour and size are one purchase block, so they sit closer to each other than
+   either does to the description above. */
+.color-field + .size-field {
+  margin-top: clamp(1.1rem, 2.5vh, 1.6rem);
 }
 
 .size-legend {
@@ -1927,7 +2016,20 @@
   transform: translateZ(0);
 }
 
-.riot-shirt img { width: 100%; height: 100%; object-fit: contain; }
+/* Same correction the product gallery makes, for the same reason: the source
+   photos are cropped to different garment-to-frame ratios, so `contain` alone
+   renders the shirt at a different size on every card. `--photo-scale` comes
+   down from `.riot-slot`; see `src/data/photoScale.ts`.
+
+   No `overflow` is added to clip the overshoot, and none is needed — the fronts
+   are alpha cutouts, so what leaves the card is transparent. Clipping here would
+   also cost the echo its bloom. */
+.riot-shirt img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: scale(var(--photo-scale, 1));
+}
 
 /* The echo sits behind the shirt in Z. Tilting separates them, which is the
    whole 3D read — a parallax gap you can see, not a drop shadow. */
@@ -1940,10 +2042,15 @@
   pointer-events: none;
 }
 
+/* Matches `.riot-shirt img` exactly. The echo is the same photograph one layer
+   back, so it takes the same zoom or the two drift apart in size and read as two
+   garments instead of one. The `scale(1.06)` spread on `.riot-echo` above is
+   separate and untouched — that one is the bloom. */
 .riot-echo img {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  transform: scale(var(--photo-scale, 1));
   /* Ember, only as light thrown behind the garment. */
   filter: brightness(0.5) sepia(1) hue-rotate(-18deg) saturate(3.2);
 }
