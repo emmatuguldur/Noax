@@ -12,7 +12,7 @@ interface LegalBlankProps {
 /**
  * Renders a fact, or — while it is still unknown — a loud gap in its place.
  *
- * The alternative is worse than it looks: prose like "operated by N.O.A.X" reads
+ * The alternative is worse than it looks: prose like "operated by N.O.U.X" reads
  * as finished, so a missing registered entity name would survive to launch
  * unnoticed inside a document whose whole purpose is to say precisely who the
  * customer is contracting with. A blank that is impossible to read past is the

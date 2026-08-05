@@ -29,8 +29,8 @@ export default function PageShell({ eyebrow, title, children, bleed }: PageShell
   return (
     <div className="page">
       <header className="page-head">
-        <Link href="/" className="page-word" aria-label="N.O.A.X — home">
-          N.O.A.X
+        <Link href="/" className="page-word" aria-label="N.O.U.X — home">
+          N.O.U.X
         </Link>
         <nav className="page-nav" aria-label="Primary">
           {NAV_ITEMS.map((item) => (
@@ -51,7 +51,7 @@ export default function PageShell({ eyebrow, title, children, bleed }: PageShell
       </main>
 
       <footer className="page-foot">
-        <span>N.O.A.X <span aria-hidden="true">/</span> Ulaanbaatar</span>
+        <span>N.O.U.X <span aria-hidden="true">/</span> Ulaanbaatar</span>
         <Link href="/" className="page-foot-link">
           Back home
         </Link>

@@ -6,7 +6,7 @@
 export default function CornerMarks() {
   return (
     <div className="corner-marks" aria-hidden="true">
-      <span className="corner corner-tl">N.O.A.X</span>
+      <span className="corner corner-tl">N.O.U.X</span>
       <span className="corner corner-tr">
         <span className="mark-cross" />
         47.92°N / 106.92°E

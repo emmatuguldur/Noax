@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { LEGAL } from "@/data/legal";
+
 const SIZES = ["S", "M", "L", "XL", "XXL"] as const;
 
 /**
@@ -51,8 +53,11 @@ export default function ProductPurchase() {
         {size ? (
           <>
             Checkout is not live yet — write to{" "}
-            <a className="product-note-link" href="mailto:hi@noax.mn">
-              hi@noax.mn
+            {/* Shared constant, not a second hard-coded address: this note used
+                to point at `hi@noax.mn` while the rest of the site pointed
+                somewhere else. */}
+            <a className="product-note-link" href={`mailto:${LEGAL.email}`}>
+              {LEGAL.email}
             </a>{" "}
             to reserve one.
           </>

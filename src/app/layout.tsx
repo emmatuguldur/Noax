@@ -7,7 +7,7 @@ import "./globals.css";
 
 /**
  * Three faces, each with one job:
- *  - Inter     display / the "N.O.A.X" wordmark and headers — an ultra-refined
+ *  - Inter     display / the "N.O.U.X" wordmark and headers — an ultra-refined
  *              grotesque (Neue Haas / Suisse Int'l spirit), tracked wide for an
  *              editorial / exhibition-catalogue feel.
  *  - Martian   the ASCII rendering, metadata, and corner micro-type.
@@ -47,7 +47,7 @@ const serif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  title: "N.O.A.X — stipple prints on heavyweight cotton",
+  title: "N.O.U.X — stipple prints on heavyweight cotton",
   description:
     "Five hand-stippled prints, screened on 240gsm combed cotton in Ulaanbaatar.",
 };

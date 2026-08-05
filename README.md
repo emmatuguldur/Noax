@@ -1,6 +1,6 @@
-# N.O.A.X
+# N.O.U.X
 
-Homepage + four routes for the N.O.A.X print label. Next.js (App Router) ·
+Homepage + four routes for the N.O.U.X print label. Next.js (App Router) ·
 TypeScript · Tailwind · GSAP/ScrollTrigger · canvas.
 
 ## Run
@@ -16,7 +16,7 @@ Node 18.18+ (Node 20+ recommended). Deploys to Vercel as-is.
 **Homepage** — hero + a centered, scroll-triggered reveal of the four shapes.
 No persistent navbar.
 
-- **Hero.** The brand mark (flower + "N.O.A.X") sits as a faded masthead; the
+- **Hero.** The brand mark (flower + "N.O.U.X") sits as a faded masthead; the
   shirt is the dominant element beneath it.
   - The shirt renders as **ASCII by default** — no hover needed. An
     always-visible **View** button swaps ASCII ↔ the real photograph; the label
@@ -271,7 +271,7 @@ signature stroke, accession tags — arranged around a middle that had nothing i
 it. Every *signifier* of a serious gallery object, no object in the room. Three
 things were actually draining it, and each has a fix here.
 
-**1. It never spoke.** The entire copy on the homepage was "N.O.A.X", "View", a
+**1. It never spoke.** The entire copy on the homepage was "N.O.U.X", "View", a
 catalogue number and "Scroll". A label's soul is mostly voice, and this one
 recited its own accession number.
 
@@ -632,9 +632,9 @@ an empty `.page-body` would only open a gap under the title.
   species as the one in the hero.
 
 **The cart button is honest about being inert.** There is no cart system, so it
-carries `aria-disabled="true"` and a line underneath pointing at `hi@noax.mn`,
-rather than looking live and swallowing the click. Wire it up and delete the
-note.
+carries `aria-disabled="true"` and a line underneath pointing at the contact
+address, rather than looking live and swallowing the click. Wire it up and
+delete the note.
 
 **New assets** — `public/shirts/design-1-back.png` (1120x944) and
 `design-1-model.png` (896x1195), dropped in as provided. Both carry a small

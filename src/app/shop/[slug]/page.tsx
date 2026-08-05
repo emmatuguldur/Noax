@@ -28,9 +28,9 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const design = DESIGNS.find((d) => d.id === slug);
-  if (!design) return { title: "Not found — N.O.A.X" };
+  if (!design) return { title: "Not found — N.O.U.X" };
   return {
-    title: `${design.name} — N.O.A.X`,
+    title: `${design.name} — N.O.U.X`,
     description: design.blurb,
   };
 }

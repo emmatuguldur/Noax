@@ -153,7 +153,7 @@ export const DESIGNS: Design[] = [
        alternate, the reverse of CAT. 02.
 
        ========================================================================
-       TODO(noax): TWO OF THE THREE WHITE SHOTS ARE NOT ON DISK.
+       TODO(noux): TWO OF THE THREE WHITE SHOTS ARE NOT ON DISK.
        ========================================================================
        `design-3-switch-model.png` exists. `design-3-switch.png` (front) and
        `design-3-switch-back.png` do not, so selecting the white swatch on

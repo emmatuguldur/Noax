@@ -60,7 +60,7 @@ export default function SiteFooter() {
     <footer className="site-foot">
       <div className="site-foot-main">
         <div className="site-foot-brand">
-          <p className="site-foot-word">N.O.A.X</p>
+          <p className="site-foot-word">N.O.U.X</p>
           <p className="site-foot-blurb">{FOOTER_COPY.blurb}</p>
 
           {/* Key, leader, value — the dotted rule is decoration between two
