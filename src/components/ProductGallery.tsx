@@ -21,7 +21,9 @@ interface View {
  * and it means real photography can be dropped in later at any ratio.
  *
  * A slot with no back or model view renders a single frame and no thumbnails —
- * four of the five catalogue slots are still unphotographed.
+ * CAT. 04 and 05 are still unphotographed. Note that this reads `design.back`
+ * and `design.model`, not the disk: files sitting in `public/shirts/` that no
+ * entry in `designs.ts` names are invisible here.
  */
 export default function ProductGallery({ design }: { design: Design }) {
   const views: View[] = [
