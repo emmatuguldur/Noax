@@ -3,8 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import PageShell from "@/components/PageShell";
-import ProductGallery from "@/components/ProductGallery";
-import ProductPurchase from "@/components/ProductPurchase";
+import ProductDetail from "@/components/ProductDetail";
 import { DESIGNS } from "@/data/designs";
 
 /**
@@ -46,40 +45,33 @@ export default async function ProductPage({ params }: Params) {
       eyebrow={`Catalogue no. ${design.cat}`}
       title={design.name}
       bleed={
-        <div className="product">
-          <ProductGallery design={design} />
+        /* `ProductDetail` owns the two-column frame and the colourway state the
+           gallery and the swatches share; everything passed in here stays
+           server-rendered. */
+        <ProductDetail design={design}>
+          <p className="product-blurb">{design.blurb}</p>
 
-          <div className="product-info">
-            <p className="product-blurb">{design.blurb}</p>
+          <dl className="product-specs">
+            <div className="product-spec">
+              <dt>Material</dt>
+              <dd>{design.medium}</dd>
+            </div>
+            <div className="product-spec">
+              <dt>Fit</dt>
+              <dd>{design.fit}</dd>
+            </div>
+            <div className="product-spec">
+              <dt>Edition</dt>
+              <dd>{design.edition}</dd>
+            </div>
+            <div className="product-spec">
+              <dt>Origin</dt>
+              <dd>{design.origin}</dd>
+            </div>
+          </dl>
 
-            <dl className="product-specs">
-              <div className="product-spec">
-                <dt>Material</dt>
-                <dd>{design.medium}</dd>
-              </div>
-              <div className="product-spec">
-                <dt>Fit</dt>
-                <dd>{design.fit}</dd>
-              </div>
-              <div className="product-spec">
-                <dt>Edition</dt>
-                <dd>{design.edition}</dd>
-              </div>
-              <div className="product-spec">
-                <dt>Origin</dt>
-                <dd>{design.origin}</dd>
-              </div>
-            </dl>
-
-            <p className="product-desc">{design.description}</p>
-
-            <ProductPurchase />
-
-            <Link href="/shop" className="product-back">
-              ← All prints
-            </Link>
-          </div>
-        </div>
+          <p className="product-desc">{design.description}</p>
+        </ProductDetail>
       }
     />
   );

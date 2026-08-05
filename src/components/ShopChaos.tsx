@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import gsap from "gsap";
 
-import { DESIGNS } from "@/data/designs";
+import { DESIGNS, frontOf } from "@/data/designs";
+import { scaleOf } from "@/data/photoScale";
 import { useCoarsePointer, usePrefersReducedMotion } from "@/lib/hooks";
 
 /**
@@ -182,6 +183,12 @@ export default function ShopChaos() {
                   "--lift": `${s.lift}px`,
                   "--tape-rot": `${s.tapeRot}deg`,
                   "--tag-rot": `${s.tagRot}deg`,
+                  /* Custom properties inherit, so setting the photo's zoom once
+                     on the slot reaches both the shirt and its echo — they are
+                     the same image and have to stay the same size, or the
+                     parallax gap between them stops reading as one garment.
+                     See `src/data/photoScale.ts`. */
+                  "--photo-scale": scaleOf(frontOf(design)),
                   zIndex: s.depth + 1,
                 } as React.CSSProperties
               }
@@ -208,13 +215,13 @@ export default function ShopChaos() {
                     shirt, which is what sells the depth. Decorative. */}
                 <div className="riot-echo" aria-hidden="true">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={design.photo} alt="" draggable={false} />
+                  <img src={frontOf(design)} alt="" draggable={false} />
                 </div>
 
                 <div className="riot-shirt">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={design.photo}
+                    src={frontOf(design)}
                     alt={`${design.name}, catalogue ${design.cat}`}
                     draggable={false}
                   />

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import AsciiRenderer from "@/components/AsciiRenderer";
-import { DESIGNS } from "@/data/designs";
+import { DESIGNS, frontOf } from "@/data/designs";
 import { useIsCompact, usePrefersReducedMotion } from "@/lib/hooks";
 
 /**
@@ -176,7 +176,7 @@ export default function ShirtDisplay() {
         {outgoing !== null && outgoing !== index && (
           <div key={`out-${outgoing}`} className="shirt-layer slide-out" aria-hidden="true">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={DESIGNS[outgoing].photo} alt="" className="shirt-photo" />
+            <img src={frontOf(DESIGNS[outgoing])} alt="" className="shirt-photo" />
           </div>
         )}
 
@@ -186,7 +186,7 @@ export default function ShirtDisplay() {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={design.photo}
+            src={frontOf(design)}
             alt={`${design.name}, catalogue ${design.cat}`}
             className="shirt-photo"
             style={{
@@ -203,7 +203,7 @@ export default function ShirtDisplay() {
             draggable={false}
           />
           <AsciiRenderer
-            src={design.photo}
+            src={frontOf(design)}
             active={asciiActive}
             cols={cols}
             className="ascii-layer"

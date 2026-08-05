@@ -2,12 +2,19 @@
 
 import { useState } from "react";
 
-import type { Design } from "@/data/designs";
+import { COLOR_LABEL, type Colorway, type Design } from "@/data/designs";
+import { scaleOf } from "@/data/photoScale";
 
 interface View {
   src: string;
   label: string;
   alt: string;
+}
+
+interface ProductGalleryProps {
+  design: Design;
+  /** The colourway to show. Owned by `ProductDetail`, set by the swatches. */
+  colorway: Colorway;
 }
 
 /**
@@ -20,34 +27,56 @@ interface View {
  * without either cropping the garment or stranding it in a band of empty void,
  * and it means real photography can be dropped in later at any ratio.
  *
- * A slot with no back or model view renders a single frame and no thumbnails —
- * CAT. 04 and 05 are still unphotographed. Note that this reads `design.back`
- * and `design.model`, not the disk: files sitting in `public/shirts/` that no
+ * A colourway with no back or model view renders a single frame and no
+ * thumbnails — CAT. 04 and 05 are still unphotographed. Note that this reads the
+ * colourway's paths, not the disk: files sitting in `public/shirts/` that no
  * entry in `designs.ts` names are invisible here.
  */
-export default function ProductGallery({ design }: { design: Design }) {
+export default function ProductGallery({ design, colorway }: ProductGalleryProps) {
+  /* Named only when there is a choice to describe — "Bloom, white, back view"
+     is useful on a two-colour print and noise on a one-colour one. */
+  const shade =
+    design.colorways.length > 1 ? `, ${COLOR_LABEL[colorway.color].toLowerCase()}` : "";
+
   const views: View[] = [
-    { src: design.photo, label: "Front", alt: `${design.name}, front view` },
-    ...(design.back
-      ? [{ src: design.back, label: "Back", alt: `${design.name}, back view` }]
+    {
+      src: colorway.photo,
+      label: "Front",
+      alt: `${design.name}${shade}, front view`,
+    },
+    ...(colorway.back
+      ? [{ src: colorway.back, label: "Back", alt: `${design.name}${shade}, back view` }]
       : []),
-    ...(design.model
-      ? [{ src: design.model, label: "Worn", alt: `${design.name}, worn` }]
+    ...(colorway.model
+      ? [{ src: colorway.model, label: "Worn", alt: `${design.name}${shade}, worn` }]
       : []),
   ];
 
   const [active, setActive] = useState(0);
-  const view = views[active];
 
-  /** Wraps both ways, so the three views are a loop rather than a dead end. */
+  /* Two colourways need not be photographed to the same depth, so an index that
+     was in range for one may not be for the other. Clamping rather than
+     resetting to the front is the point: switch colour while looking at the
+     back and you get the back in the other colour. */
+  const index = Math.min(active, views.length - 1);
+  const view = views[index];
+
+  /** Wraps both ways, so the views are a loop rather than a dead end. */
   const step = (delta: number) =>
-    setActive((i) => (i + delta + views.length) % views.length);
+    setActive((index + delta + views.length) % views.length);
 
   return (
     <div className="product-gallery">
       <figure className="product-frame">
+        {/* Every photo is cropped differently, so `contain` alone lands the
+            garment at a different size on each one — see `photoScale.ts`. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={view.src} alt={view.alt} draggable={false} />
+        <img
+          src={view.src}
+          alt={view.alt}
+          draggable={false}
+          style={{ "--photo-scale": scaleOf(view.src) } as React.CSSProperties}
+        />
 
         {views.length > 1 && (
           <>
@@ -82,9 +111,9 @@ export default function ProductGallery({ design }: { design: Design }) {
               key={v.src}
               type="button"
               role="tab"
-              aria-selected={i === active}
+              aria-selected={i === index}
               aria-label={v.label}
-              className={i === active ? "product-thumb product-thumb-on" : "product-thumb"}
+              className={i === index ? "product-thumb product-thumb-on" : "product-thumb"}
               onClick={() => setActive(i)}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}

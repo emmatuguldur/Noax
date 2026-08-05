@@ -67,9 +67,21 @@ slots.
   `back` / `model` to a slot is all that's needed to give it a full set — and
   a slot whose files are on disk but *not* named in `designs.ts` shows a single
   frame with no thumbnails or arrows, which is exactly what 2 and 3 did.
-- `public/shirts/design-2-switch.png` and `design-2-switch-back.png` are on disk
-  but **nothing references them** — there's no colourway/variant field on
-  `Design`. Either wire them up or delete them.
+- **Photo scale.** The shirt photos are cropped inconsistently — the garment
+  covered anywhere from 64% to 100% of the frame — so the product gallery
+  applies a measured per-photo zoom from `src/data/photoScale.ts` on top of
+  `object-fit: contain`. Design 1 is the reference. **If you re-crop or replace
+  a photo, re-measure its entry** (or delete it, which falls back to 1) or it
+  will render at the wrong size. The right long-term fix is consistent crops at
+  the source, which would let that file shrink to nothing.
+- **Colourways.** Designs 2 and 3 are each cut in two colours, held in
+  `Design.colorways` (first entry = default = what the hero and shop grid show).
+  Design 2 defaults to white with a black alternate; design 3 is the reverse.
+  The alternate's shots are the `-switch` files.
+  **Two are still missing: `design-3-switch.png` and `design-3-switch-back.png`.**
+  Both are already named in `src/data/designs.ts`, so dropping the files into
+  `public/shirts/` is the whole fix — until then, design 3's white swatch shows
+  a broken front frame and back thumbnail.
 - In `src/data/designs.ts`, **NX-01 "Interference"** is a name/blurb I wrote —
   overwrite it. NX-02..05 read "Forthcoming" until their photos land.
 - Shape art lives in `public/shapes/` (star = About, diamond = Shop,
