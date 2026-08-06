@@ -16,6 +16,10 @@
   --paper: #ede9e2;
   --ash: #6e6c6a;
   --ember: #c9601a;
+  /* Shop only — ember's cool counterpart (opposite the wheel, same restraint),
+     a muted verdigris like oxidised copper hardware or an old price tag. Marks
+     the one route that's commerce rather than editorial. */
+  --verdigris: #4f8378;
 }
 
 @layer base {
@@ -395,6 +399,14 @@
   pointer-events: none;
 }
 
+.shape-field-cutting {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 .shape-field-eyebrow {
   position: fixed;
   top: calc(50% - clamp(7rem, 15vh, 10.5rem));
@@ -474,7 +486,16 @@
 /* ---------------------------------------------------------------------------
    Route pages
 --------------------------------------------------------------------------- */
-.page { min-height: 100svh; display: flex; flex-direction: column; }
+.page { min-height: 100svh; display: flex; flex-direction: column; position: relative; z-index: 1; }
+
+.page-cutting-bg {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
 
 .page-head {
   display: flex;
@@ -711,8 +732,11 @@
   margin-top: clamp(2.5rem, 6vh, 4rem);
   display: grid;
   gap: 1px;
-  background: rgba(237, 233, 226, 0.08);
-  border: 1px solid rgba(237, 233, 226, 0.08);
+  background: rgba(79, 131, 120, 0.16);
+  border: 1px solid rgba(79, 131, 120, 0.4);
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(79, 131, 120, 0.08);
   grid-template-columns: repeat(1, minmax(0, 1fr));
 }
 
@@ -727,10 +751,16 @@
 .shop-card {
   background: var(--void);
   padding: 1.5rem 1.35rem 1.35rem;
-  transition: background 260ms ease;
+  box-shadow: inset 2px 0 0 transparent;
+  transition: background 260ms ease, box-shadow 260ms ease;
 }
 
-.shop-card:hover { background: var(--slate); }
+.shop-card:hover {
+  background: var(--slate);
+  box-shadow: inset 2px 0 0 var(--verdigris);
+}
+
+.shop-card:hover .shop-card-name { color: var(--verdigris); }
 
 .shop-card-figure {
   aspect-ratio: 544 / 458;
@@ -747,6 +777,7 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   color: var(--paper);
+  transition: color 260ms ease;
 }
 
 .shop-card-meta {
