@@ -46,8 +46,6 @@ function smoothstep(edge0: number, edge1: number, x: number): number {
   return t * t * (3 - 2 * t);
 }
 
-const SHOP_INDEX = NAV_ITEMS.findIndex((item) => item.id === "shop");
-
 export default function ShapeField() {
   const compact = useIsCompact();
   const reduceMotion = usePrefersReducedMotion();
@@ -132,9 +130,7 @@ export default function ShapeField() {
 
       if (ctx && canvasRef.current) {
         ctx.clearRect(0, 0, view.w, view.h);
-        const shopShell = SHOP_INDEX >= 0 ? shellRefs.current[SHOP_INDEX] : null;
-        const excludeRect = shopShell ? shopShell.getBoundingClientRect() : null;
-        cuttingRef.current?.draw(ctx, view.w, view.h, now, excludeRect, converge, still);
+        cuttingRef.current?.draw(ctx, view.w, view.h, now, null, converge, still);
       }
 
       for (let i = 0; i < NAV_ITEMS.length; i += 1) {

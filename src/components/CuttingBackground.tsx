@@ -6,9 +6,11 @@ import { CuttingAnimator } from "@/lib/cutting";
 import { usePrefersReducedMotion } from "@/lib/hooks";
 
 /**
- * Full-page version of the shape row's cutting animation, used on the
- * About / Story / Contact routes (not Shop). Sits fixed behind the page
- * content — `.page` carries the z-index that keeps it on top.
+ * Full-page version of the shape row's cutting animation. Mounted once in
+ * the root layout so it runs on every route, including Shop — `.page`
+ * carries the z-index that keeps page content (including Shop's tilting
+ * 3D cards) on top of the canvas, the same stacking that already puts it
+ * behind the homepage's 3D nav shapes.
  */
 export default function CuttingBackground() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
