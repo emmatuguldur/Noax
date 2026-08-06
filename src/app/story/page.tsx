@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import CuttingBackground from "@/components/CuttingBackground";
 import PageShell from "@/components/PageShell";
 
-export const metadata: Metadata = { title: "Story — N.O.A.X" };
+export const metadata: Metadata = { title: "Story — N.O.U.X" };
 
 export default function StoryPage() {
   return (

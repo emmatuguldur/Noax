@@ -16,10 +16,26 @@
   --paper: #ede9e2;
   --ash: #6e6c6a;
   --ember: #c9601a;
+
   /* Shop only — ember's cool counterpart (opposite the wheel, same restraint),
      a muted verdigris like oxidised copper hardware or an old price tag. Marks
      the one route that's commerce rather than editorial. */
   --verdigris: #4f8378;
+
+  /* Dimmed paper that still clears 4.5:1 on the void. `--ash` is 3.9:1 and is
+     kept only for the pre-existing micro-type; new copy uses this. */
+  --paper-dim: rgba(237, 233, 226, 0.62);
+
+  /* --- Hero choreography ---------------------------------------------------
+     Staged against the arrival clock in `ShirtDisplay`: AUTO_REVEAL_MS 1000,
+     then the renderer's DISSOLVE_MS 1300 — the grid begins to let go at 1000ms
+     and has fully gone at ~2300ms. Change the constants there and change these.
+
+     Stages 3 and 4 belonged to the two-part statement v12 moved out of the
+     hero; what's left is the overline (1), the spec line (5) and the scroll
+     hint (6), which land after the garment has settled. */
+  --t-dur: 900ms;
+  --t-ease: cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 
 @layer base {
@@ -47,52 +63,51 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Brand mark — flat flower watermark, wordmark in front
+   Staged entrance
+
+   One shared animation, per-element delays. Elements are *visible by default*
+   and only animate where motion is welcome — so reduced-motion users, and
+   anyone whose CSS loads without the animation applying, get the finished page
+   rather than a blank one. `backwards` holds the from-state during the delay.
 --------------------------------------------------------------------------- */
-.brand-mark {
-  position: relative;
-  display: grid;
-  place-items: center;
-  /* Own stacking context: without it, the flower's negative z-index resolved
-     against the root and the opaque body background painted over it — which is
-     why it kept "disappearing". */
-  isolation: isolate;
-  padding-top: clamp(3.5rem, 9vh, 6rem);
+@keyframes stageIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.brand-flower {
-  position: absolute;
-  z-index: 0;
-  top: 50%;
-  left: 50%;
-  width: clamp(19rem, 40vw, 29rem);
-  transform: translate(-50%, -46%);
-  opacity: 0.18;
-  /* The artwork is near-black, so on the void it only reads if lifted. Invert
-     turns the petals light and the whole flower shows as a faint watermark;
-     screen/brightness lifted only the bright core, which looked like nothing. */
-  filter: invert(1);
-  pointer-events: none;
-  user-select: none;
-  /* Feather the edges into the page so the mark melts in rather than sitting
-     on it as a rectangle. */
-  -webkit-mask-image: radial-gradient(
-    ellipse 62% 62% at 50% 48%,
-    #000 34%,
-    rgba(0, 0, 0, 0.4) 58%,
-    transparent 74%
-  );
-  mask-image: radial-gradient(
-    ellipse 62% 62% at 50% 48%,
-    #000 34%,
-    rgba(0, 0, 0, 0.4) 58%,
-    transparent 74%
-  );
+@media (prefers-reduced-motion: no-preference) {
+  .stage {
+    animation: stageIn var(--t-dur) var(--t-ease) backwards;
+  }
+
+  /* Masthead settles first, while the grid is still typing itself on. */
+  .brand-word {
+    animation: stageIn var(--t-dur) var(--t-ease) 420ms backwards;
+  }
+
+  .stage-1 { animation-delay: 200ms; }
+  .stage-5 { animation-delay: 2850ms; }
+  .stage-6 { animation-delay: 3150ms; }
+}
+
+/* ---------------------------------------------------------------------------
+   Brand mark — the wordmark, unaccompanied
+
+   The flower watermark that used to sit behind this is gone, and with it the
+   stacking context and the padding that existed to make room for it.
+--------------------------------------------------------------------------- */
+.brand-mark {
+  display: grid;
+  place-items: center;
 }
 
 .brand-word {
-  position: relative;
-  z-index: 1;
   margin: 0;
   font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
   font-weight: 400;
@@ -166,12 +181,85 @@
   }
 }
 
+.hero-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hero-overline {
+  margin: 0;
+  padding-top: clamp(2.5rem, 6vh, 4rem);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+  text-align: center;
+  /* Optical centring — the trailing letter-space would otherwise push it left. */
+  margin-right: -0.42em;
+}
+
+/* Sets the gap between the overline and the wordmark. */
+.hero-head .brand-mark {
+  padding-top: clamp(1rem, 2.5vh, 1.75rem);
+}
+
 .hero-stage {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(1rem, 3vh, 2.5rem) 0;
+  padding: clamp(0.5rem, 2vh, 1.75rem) 0;
+}
+
+/* ---------------------------------------------------------------------------
+   The statement — the one place the label speaks
+
+   Set in the serif, because every other face on the site is a grotesque or a
+   monospace. The contrast is the point: after a page of machine type, one line
+   with a wrist in it.
+--------------------------------------------------------------------------- */
+.hero-say {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.75rem, 2vh, 1.25rem);
+  padding: clamp(0.75rem, 3vh, 2rem) 0 clamp(0.5rem, 2vh, 1.25rem);
+  text-align: center;
+}
+
+.hero-spec {
+  margin: 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+  margin-right: -0.2em;
+}
+
+@media (max-width: 640px) {
+  .hero-spec {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    max-width: 30ch;
+    line-height: 1.7;
+  }
+}
+
+/* Short laptop screens are where the hero grows past the fold and takes the
+   scroll hint with it, so give the shirt and the masthead back some room. Less
+   pressing since v12 moved the statement out, but the hero still runs long on a
+   900px-tall viewport. */
+@media (max-height: 780px) {
+  .shirt-stage {
+    width: min(46rem, 88vw, 54vh);
+  }
+
+  .hero-overline {
+    padding-top: clamp(1.5rem, 4vh, 2.5rem);
+  }
 }
 
 .hero-foot {
@@ -195,6 +283,91 @@
 }
 
 /* ---------------------------------------------------------------------------
+   Abandoned museum — the corner drapes
+
+   Time passing in the room the framing already built. Everything below is
+   aria-hidden, non-interactive, and lives in the hero's z-0 layer next to the
+   pillars, so `.hero-content` (z-1) — wordmark, shirt, statement — is always in
+   front of it, and the fixed shape overlay (z-40) always above that.
+
+   Monochrome, low opacity, edges feathered rather than cut. If it needs to come
+   back, raise the `opacity` values; they are the only dial that matters. The
+   spider that used to hang here now lives with the shape row — see
+   `.shape-spider`, further down.
+--------------------------------------------------------------------------- */
+
+/* --- Cobwebs -------------------------------------------------------------
+   Both drawings are ink-on-paper, so they invert like the shapes and the
+   flower. Each web is feathered by a radial mask anchored at its own corner:
+   the mask only takes the *inner* edge, so the torn silhouette on the hanging
+   side survives and the canvas never reads as a rectangle. The straight edges
+   the artwork does have are pushed past the viewport instead, and clipped
+   here rather than by the body. */
+.hero-webs {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100svh;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.cobweb {
+  position: absolute;
+  top: 0;
+  opacity: 0.14;
+  filter: grayscale(1) invert(1);
+  user-select: none;
+}
+
+/* Top-left: the wide drape, hung from its own top edge. */
+.cobweb-tl {
+  left: -3%;
+  width: clamp(9rem, 22vw, 26rem);
+  -webkit-mask-image: radial-gradient(
+    125% 125% at 0% 0%,
+    #000 42%,
+    rgba(0, 0, 0, 0.45) 72%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    125% 125% at 0% 0%,
+    #000 42%,
+    rgba(0, 0, 0, 0.45) 72%,
+    transparent 100%
+  );
+}
+
+/* Top-right: the orb web, and a different drawing on purpose — decay that
+   matches on both sides reads as ornament. Mirrored, which is also why its
+   mask is anchored top-*left*: masks are painted in the element's own space
+   and the flip carries them across. */
+.cobweb-tr {
+  right: -3%;
+  width: clamp(8rem, 18vw, 21rem);
+  transform: scaleX(-1);
+  /* Higher than the drape's 0.14 on purpose, to land in the same place. This
+     drawing is much lighter line work (mid-grey pencil against the other's
+     near-black), so inverting it yields a dimmer white; matching the numbers
+     would leave this corner looking empty next to the left one. */
+  opacity: 0.19;
+  -webkit-mask-image: radial-gradient(
+    125% 125% at 0% 0%,
+    #000 40%,
+    rgba(0, 0, 0, 0.45) 70%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    125% 125% at 0% 0%,
+    #000 40%,
+    rgba(0, 0, 0, 0.45) 70%,
+    transparent 100%
+  );
+}
+
+/* ---------------------------------------------------------------------------
    Shirt — the primary content, sized up
 --------------------------------------------------------------------------- */
 .shirt-block {
@@ -206,14 +379,22 @@
 
 .shirt-stage {
   position: relative;
-  /* Matches the product cutout framing (544 x 458). Deliberately large. */
-  width: min(46rem, 88vw, 74vh);
+  /* Matches the product cutout framing (544 x 458). Deliberately large — but
+     the vh cap came down from 74 to 62 in v8 to make room for the statement
+     without the hero overflowing on short laptop screens. */
+  width: min(46rem, 88vw, 62vh);
   aspect-ratio: 544 / 458;
-  /* Arch-cut niche: gently arched top corners, a soft radial vignette behind
-     the piece, and a hairline border. `overflow` is left visible on purpose so
-     the border/background arch but the arrow and mouse-follow ASCII (children)
-     are never clipped — the background respects the radius on its own. */
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  /* Arch-cut niche: gently arched top corners and a soft radial vignette behind
+     the piece. `overflow` is left visible on purpose so the border/background
+     arch but the arrow and mouse-follow ASCII (children) are never clipped —
+     the background respects the radius on its own. */
+  /* The hairline is held in the box at all times and only coloured in on hover.
+     Removing it outright instead would grow the padding box by 2px, and the
+     ASCII layer is `inset: 0` against that box with a ResizeObserver on it — so
+     a bare `border: none` would re-measure and rebuild the whole grid on every
+     mouse in and out. */
+  border: 1px solid transparent;
+  transition: border-color 260ms ease;
   border-radius: clamp(48px, 11vw, 150px) clamp(48px, 11vw, 150px) 0 0;
   background: radial-gradient(
     circle at center,
@@ -222,9 +403,41 @@
   );
 }
 
+/* Gated on a real hover pointer: on touch, `:hover` sticks after a tap and the
+   niche would keep an outline nobody asked for until you tapped elsewhere. */
+@media (hover: hover) {
+  .shirt-stage:hover {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+/* The light the garment arrives into. Opacity is driven from JS by the
+   dissolve progress, so the niche lifts as the cloth resolves — dim while the
+   page is still "reading" the shirt as characters, lit once it's really there.
+   Two stacked ellipses: a warm ember core (finally letting the accent breathe,
+   as atmosphere rather than as UI) under a cooler paper halo. */
+.shirt-bloom {
+  position: absolute;
+  inset: -14% -10%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 42% 48% at 50% 46%, rgba(201, 96, 26, 0.13), transparent 70%),
+    radial-gradient(ellipse 56% 60% at 50% 48%, rgba(237, 233, 226, 0.085), transparent 72%);
+  filter: blur(26px);
+  transition: opacity 700ms var(--t-ease);
+}
+
+/* During the dissolve the rAF loop writes --dissolve every frame; a transition
+   on top of that would smear a frame behind. */
+.shirt-stage[data-dissolving] .shirt-bloom {
+  transition: none;
+}
+
 .shirt-layer {
   position: absolute;
   inset: 0;
+  z-index: 1;
 }
 
 .shirt-photo {
@@ -269,6 +482,7 @@
 /* Simple arrow control, parked at the far right of the display area. */
 .arrow-next {
   position: absolute;
+  z-index: 2; /* above the bloom and the shirt layers */
   right: clamp(-2.75rem, -4vw, -1rem);
   top: 50%;
   transform: translateY(-50%);
@@ -386,19 +600,40 @@
    loose hero anchors around the shirt; scrolling drags them into the row, which
    is the destination — there is no docked navbar.
 --------------------------------------------------------------------------- */
-.shape-spacer {
-  /* Pure scroll distance to reach and hold the assembled row. */
-  height: 85vh;
+/* The pin. See `page.tsx` for why the track is shaped this way. */
+.shape-track {
+  position: relative;
+}
+
+/* Pulled back up by exactly the field's height, so the hero still starts at
+   the top of the page. The field has to be the track's *first* child for
+   sticky to hold it at the viewport top from the first frame — put the
+   negative margin on the field instead and it would break its own sticky
+   containment, because a negative bottom margin *extends* the rectangle it is
+   allowed to stick within, which is the one thing keeping it off the footer. */
+.shape-under {
+  margin-top: -100svh;
+}
+
+.shape-rail {
+  /* Scroll distance for the assemble and the hold. The field releases once its
+     bottom meets the track's, i.e. at `heroHeight + this - 100svh`. */
+  height: 150vh;
   pointer-events: none;
 }
 
 .shape-field {
-  position: fixed;
-  inset: 0;
+  position: sticky;
+  top: 0;
+  height: 100svh;
   z-index: 40;
   pointer-events: none;
 }
 
+/* Absolute, not fixed: the field is its containing block and is exactly the
+   viewport while pinned, so this lands identically — but it now travels with
+   the field when it releases instead of staying stuck to the viewport. Same
+   reason applies to `.shape-spider`. */
 .shape-field-cutting {
   position: absolute;
   inset: 0;
@@ -408,7 +643,7 @@
 }
 
 .shape-field-eyebrow {
-  position: fixed;
+  position: absolute;
   top: calc(50% - clamp(7rem, 15vh, 10.5rem));
   left: 50%;
   transform: translateX(-50%);
@@ -465,6 +700,92 @@
   filter: invert(1) drop-shadow(0 0 16px rgba(237, 233, 226, 0.3));
 }
 
+/* --- The spider ----------------------------------------------------------
+   Moved here from the hero: it is no longer something you land on, it is
+   something the shape section brings with it. `--assembled` is the same 0..1
+   convergence the eyebrow reads, written once per frame by ShapeField, so the
+   spider lowers itself in exactly as the row forms and is fully absent at the
+   top of the page.
+
+   Three motions, two elements. The wrapper owns the entrance drop, which is a
+   plain declaration driven by `--assembled`; the artwork owns the two idle
+   loops. They can share an element because they animate the *individual*
+   transform properties — `rotate` for the sway, `translate` for the bob —
+   rather than both fighting over the `transform` shorthand, which is what lets
+   them run on unrelated periods without a third wrapper div to hold one of
+   them. Anything that sets `transform` on `.shape-spider-art` breaks that. */
+.shape-spider {
+  --spider-h: clamp(9rem, 24svh, 16rem);
+  position: absolute;
+  /* The thread starts 3.75% down the canvas; lifting the box by exactly that
+     puts its top on the viewport's top edge, where a thread should start. */
+  top: calc(var(--spider-h) * -0.0375);
+  /* Outboard of the assembled row, which reaches ~395px either side of centre
+     at its widest. */
+  right: 12%;
+  height: var(--spider-h);
+  /* The row is the event; this is a detail beside it, so it lands quieter than
+     the shapes and never competes with the labels fading up under them. */
+  opacity: calc(var(--assembled, 0) * 0.16);
+  /* Lowers the last 34px as it arrives — it is on a thread, so it comes down. */
+  transform: translateY(calc((1 - var(--assembled, 0)) * -34px));
+  pointer-events: none;
+}
+
+.shape-spider-art {
+  display: block;
+  height: 100%;
+  width: auto;
+  filter: grayscale(1) invert(1);
+  user-select: none;
+  /* Pivot at the thread's anchor, not the box centre. */
+  transform-origin: 48% 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Two loops on deliberately unrelated periods — 4.8s and 38s — so they never
+     line up and the motion doesn't read as a cycle. `alternate` is what makes
+     each one a round trip rather than a sawtooth that snaps back. */
+  .shape-spider-art {
+    animation:
+      spiderBob 2.4s ease-in-out infinite alternate,
+      spiderSway 19s ease-in-out infinite alternate;
+  }
+}
+
+/* The strand giving and taking up again. Rest is the top of the travel and it
+   only ever hangs *below* that, which is the way weight works; 8px over 4.8s is
+   slow enough to catch the eye without ever asking for it. */
+@keyframes spiderBob {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: 0 8px;
+  }
+}
+
+/* A 38s round trip of ±0.9° — about 4px of travel at the spider, and four
+   times slower than the shapes' idle drift. Pivots at the thread's anchor via
+   `transform-origin`, which individual transform properties honour too. */
+@keyframes spiderSway {
+  from {
+    rotate: -0.9deg;
+  }
+  to {
+    rotate: 0.9deg;
+  }
+}
+
+@media (max-width: 767px) {
+  /* The row goes edge-to-edge on a phone, so the spider comes in smaller and
+     hangs clear above it rather than beside it. */
+  .shape-spider {
+    --spider-h: clamp(7rem, 17svh, 10rem);
+    right: 6%;
+  }
+}
+
 /* Sits under the shape; its opacity is driven by --lo, which ShapeField ramps
    up only as the shapes line up into the row. */
 .nav-shape-label {
@@ -481,6 +802,277 @@
   white-space: nowrap;
   color: var(--paper);
   opacity: var(--lo, 0);
+}
+
+/* ---------------------------------------------------------------------------
+   Material section — an editorial spread
+
+   Copy and two hard numbers on the left, two offset macro plates on the right.
+   v12 closed it with a pull-quote over an oversized ghost word; v13 took the
+   quote out and the ghost and glow dot went with it, since they existed to sit
+   behind it.
+
+   Everything reuses the scale already in the file — display face for headings,
+   mono for labels, `--paper-dim` for prose, same as `.page-body`.
+--------------------------------------------------------------------------- */
+.material {
+  position: relative;
+  max-width: 88rem;
+  margin: 0 auto;
+  /* The bottom value used to be 0 because the pull-quote block carried the
+     space down to the footer. With that gone the section has to hold its own
+     tail, or the footer sits straight under the plates. */
+  padding: clamp(4rem, 14vh, 9rem) clamp(1rem, 5vw, 4rem) clamp(3rem, 10vh, 6.5rem);
+}
+
+.material-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(2.5rem, 6vw, 4.5rem);
+  align-items: start;
+}
+
+@media (min-width: 350px) {
+  .material-top {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+/* Dashed lead-in, same archival register as the corner marks' dotted leaders. */
+.material-eyebrow {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+.material-eyebrow::before {
+  content: "";
+  display: block;
+  width: 56px;
+  margin-bottom: 0.9rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.28);
+}
+
+.material-title {
+  margin-top: clamp(1rem, 2.5vh, 1.6rem);
+  max-width: 11ch;
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 400;
+  font-size: clamp(1.9rem, 4.6vw, 3.2rem);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: var(--paper);
+}
+
+.material-body {
+  margin-top: clamp(1.25rem, 3vh, 2rem);
+  max-width: 44ch;
+  font-size: 0.9rem;
+  line-height: 1.75;
+  color: var(--paper-dim);
+}
+
+/* --- The two numbers ------------------------------------------------------ */
+/* A grid rather than a wrapping flex row: the two numbers are a pair and read
+   as one comparison, so they stay side by side down to the narrowest screen
+   instead of breaking into a stack the moment the labels get long. */
+.material-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1.25rem, 6vw, 3.5rem);
+  max-width: 30rem;
+  margin-top: clamp(2rem, 5vh, 3.25rem);
+}
+
+.material-stat-value {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(1.6rem, 3.4vw, 2.3rem);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--paper);
+}
+
+/* The section's only warm mark, and it is one glyph wide. */
+.material-stat-unit {
+  color: var(--ember);
+}
+
+.material-stat-label {
+  margin-top: 0.8rem;
+  padding-top: 0.65rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.18);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  line-height: 1.7;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+/* --- The plates ----------------------------------------------------------- */
+.material-figures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(0.75rem, 2vw, 1.25rem);
+  align-items: start;
+}
+
+.material-figure {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  /* `cover` is what lets real photography drop in at any ratio later without
+     the layout moving. */
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  filter: grayscale(1);
+  user-select: none;
+}
+
+/* Offset rather than aligned, so the pair reads as laid down by hand. */
+.material-figure-2 {
+  margin-top: clamp(2rem, 7vw, 4.5rem);
+}
+
+/* ---------------------------------------------------------------------------
+   Homepage footer
+
+   Sub-pages keep their own `.page-foot`; this closes the long scroll, which
+   they don't have. The navigation column repeats the four shape destinations
+   as text links — a duplicate of that system, not a replacement for it.
+--------------------------------------------------------------------------- */
+.site-foot {
+  max-width: 88rem;
+  margin: 0 auto;
+  /* The bottom padding clears the fixed corner marks, which sit ~1.5rem off the
+     viewport floor and would otherwise land on top of the bottom bar at the end
+     of the scroll. */
+  padding: clamp(4rem, 12vh, 7rem) clamp(1rem, 5vw, 4rem) clamp(3.5rem, 9vh, 5.5rem);
+}
+
+.site-foot-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(0rem, 5vw, 0rem);
+}
+
+@media (min-width: 768px) {
+  .site-foot-main {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  }
+}
+
+.site-foot-word {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-size: 1.15rem;
+  letter-spacing: 0.28em;
+  margin-right: -0.28em;
+  color: var(--paper);
+}
+
+.site-foot-blurb {
+  margin-top: clamp(1rem, 2.5vh, 1.5rem);
+  max-width: 36ch;
+  font-size: 0.82rem;
+  line-height: 1.75;
+  color: var(--paper-dim);
+}
+
+/* The spec line under the blurb — same dotted-leader treatment as the `Origin`
+   row in `.product-spec`, held to a short measure so the leader stays a hairline
+   between two words rather than running the width of the brand column. */
+.site-foot-origin {
+  margin-top: clamp(1.5rem, 3.5vh, 2rem);
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  max-width: 17rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+.site-foot-leader {
+  flex: 1 1 auto;
+  /* Sits on the baseline the two words share, not under their descenders. */
+  transform: translateY(-0.25em);
+  border-bottom: 1px dotted rgba(255, 255, 255, 0.15);
+}
+
+.site-foot-origin-value {
+  flex: 0 0 auto;
+  color: var(--paper-dim);
+}
+
+.site-foot-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: clamp(2rem, 5vw, 4rem);
+}
+
+.site-foot-tag {
+  padding-bottom: 0.7rem;
+  border-bottom: 1px dotted rgba(255, 255, 255, 0.15);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+.site-foot-list {
+  margin-top: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  list-style: none;
+  padding: 0;
+}
+
+.foot-link {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+  text-decoration: none;
+}
+
+/* Carried by everything that actually goes somewhere. Items without an `href`
+   stay plain `.foot-link` so nothing offers a hover state it can't honour. */
+.foot-link-live {
+  transition: color 200ms ease;
+}
+
+.foot-link-live:hover,
+.foot-link-live:focus-visible {
+  color: var(--ember);
+}
+
+.site-foot-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: clamp(3rem, 8vh, 5rem);
+  padding-top: clamp(1.25rem, 3vh, 1.75rem);
+  border-top: 1px solid rgba(237, 233, 226, 0.08);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+@media (max-width: 480px) {
+  .site-foot-bar {
+    font-size: 8px;
+    letter-spacing: 0.16em;
+  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -534,7 +1126,7 @@
   max-width: 52rem;
   width: 100%;
   margin: 0 auto;
-  padding: clamp(3.5rem, 12vh, 8rem) clamp(1rem, 5vw, 4rem);
+  padding: clamp(3.5rem, 10vh, 8rem) clamp(1rem, 5vw, 4rem);
 }
 
 .page-eyebrow {
@@ -727,6 +1319,172 @@
   background: none;
 }
 
+/* ---------------------------------------------------------------------------
+   Legal — /terms and /privacy
+
+   Long-form clause text living inside `.page-body`'s 36rem measure, which is
+   already the right column width for reading; nothing here widens it. The
+   section rules and mono headings are the same vocabulary as `.page-head` and
+   `.page-eyebrow`, so the documents read as part of the site rather than as a
+   pasted-in legal appendix.
+
+   Clause numbers are written into the markup, not generated by a counter, and
+   the indent is a plain hanging indent rather than a grid: these numbers get
+   cited ("section 7.3", "Article 254") and must not renumber themselves
+   because a clause was inserted above them.
+--------------------------------------------------------------------------- */
+.legal-updated {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  line-height: 1.8;
+  color: var(--paper-dim);
+}
+
+.legal-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding-top: clamp(1.25rem, 3vh, 2rem);
+  border-top: 1px solid rgba(237, 233, 226, 0.08);
+}
+
+.legal-h {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  line-height: 1.7;
+  text-transform: uppercase;
+  color: var(--paper);
+}
+
+.legal-h-num { color: var(--ember); }
+
+/* `role="list"` is on these in the markup: Tailwind's preflight strips
+   `list-style` from every list, and Safari drops list semantics along with the
+   marker unless the role is restated. */
+.legal-clauses,
+.legal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+/* Hanging indent. The number is an inline-block of exactly the indent width,
+   pulled into the margin by the negative `text-indent` on the first line. */
+.legal-clause {
+  padding-left: 3rem;
+  text-indent: -3rem;
+}
+
+.legal-num {
+  display: inline-block;
+  width: 3rem;
+  text-indent: 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--paper-dim);
+}
+
+.legal-list li {
+  padding-left: 1.5rem;
+  text-indent: -1.5rem;
+}
+
+/* A list nested under a clause. `text-indent` inherits, so it has to be undone
+   or the bullets hang three characters into the margin. */
+.legal-clause .legal-list {
+  margin-top: 0.55rem;
+  text-indent: 0;
+}
+
+.legal-list li::before {
+  content: "/";
+  display: inline-block;
+  width: 1.5rem;
+  text-indent: 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.72rem;
+  color: var(--ember);
+}
+
+/* Defined terms and statute names. Bold would be a fourth weight on a page
+   that only has three; on this background, coming up to full `--paper` from
+   the dimmed body colour is emphasis enough. */
+.legal-term {
+  font-weight: 400;
+  color: var(--paper);
+}
+
+.legal-link {
+  color: var(--paper);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(237, 233, 226, 0.24);
+  transition: border-color 220ms ease, color 220ms ease;
+}
+
+.legal-link:hover { color: var(--ember); border-color: var(--ember); }
+
+/* The table scrolls inside its own box rather than pushing the page sideways:
+   two columns of prose cannot compress below ~20rem and the measure is
+   narrower than that on a phone. */
+.legal-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.legal-table {
+  width: 100%;
+  min-width: 20rem;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.legal-table th,
+.legal-table td {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(237, 233, 226, 0.12);
+  text-align: left;
+  vertical-align: top;
+}
+
+.legal-table thead th {
+  background: var(--slate);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--paper);
+}
+
+.legal-table tbody th {
+  font-weight: 400;
+  color: var(--paper);
+}
+
+/* An unfilled fact — see `src/data/legal.ts`. Ember on a dotted rule, the
+   treatment the old placeholder banner used, because a document that binds you
+   must never quietly ship with an invented company name in it. Deliberately
+   the one piece of copy on the site below 4.5:1: it is scaffolding, and it is
+   gone the moment the value is known. */
+.legal-blank {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.78em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ember);
+  border-bottom: 1px dotted var(--ember);
+}
+
 /* Shop grid (reused on the shop route) */
 .shop-grid {
   margin-top: clamp(2.5rem, 6vh, 4rem);
@@ -794,6 +1552,759 @@
   font-size: 0.875rem;
   line-height: 1.6;
   color: rgba(237, 233, 226, 0.5);
+}
+
+/* ---------------------------------------------------------------------------
+   Product detail — /shop/[slug]
+
+   Gallery left, specification right. Everything is borrowed: the frame border
+   and `--void` ground come from the shop cards, the label micro-type and dotted
+   leaders from the corner marks, and the cart button is `.view-toggle` at a
+   larger size. Nothing new is introduced except the grid.
+--------------------------------------------------------------------------- */
+.product {
+  max-width: 82rem;
+  margin: 0 auto;
+  padding: clamp(2rem, 6vh, 3.5rem) clamp(1rem, 5vw, 4rem) 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(2rem, 5vw, 4rem);
+}
+
+@media (min-width: 900px) {
+  .product {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+/* --- Gallery -------------------------------------------------------------- */
+.product-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.65rem, 1.6vw, 1rem);
+}
+
+/* Square, because the three views don't share a ratio — the cutouts are 1.19:1
+   and the model shot is 0.75:1. `contain` inside a square holds both without
+   cropping the garment or stranding it in a band of empty void. */
+.product-frame {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  /* Without this the square is a suggestion, not a rule. This is a flex item
+     in a column, so its automatic minimum size is the content's min-content
+     height — and for the 0.75:1 model shot that is the frame's own width
+     divided by 0.75, which beat `aspect-ratio` and stretched the frame to
+     587x782 while the two cutouts sat at 587x587. It also shoved the thumbnail
+     row 195px down the page whenever that view was selected. */
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--void);
+  border: 1px solid rgba(237, 233, 226, 0.1);
+}
+
+/* `min-height: 0` for the same reason as the frame, one level down: this is a
+   grid item, so its automatic minimum size is its own min-content height, which
+   for a portrait photo is taller than the square it is being asked to fill.
+   Without it the box stays 585x780 and `overflow: hidden` merely crops the
+   model's head and feet off instead of letting `contain` fit the whole frame.
+   The thumbnails escape this only because they carry an explicit
+   `aspect-ratio`, which replaces the natural ratio in that calculation. */
+.product-frame img {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  object-fit: contain;
+  /* `contain` fits each *image* to the frame, which is not the same as fitting
+     each *garment* — the photos are cropped inconsistently, so the shirt lands
+     at a different size on every one. The per-photo correction that fixes that
+     comes in as an inline `--photo-scale` from `ProductGallery`; see
+     `src/data/photoScale.ts` for how the numbers were measured. The frame's
+     `overflow: hidden` clips what the scale-ups push out, which is empty margin
+     in every case.
+
+     Not applied to `.product-thumb img`: those are `object-fit: cover`, where a
+     scale below 1 would pull the photo off its own edges and show the frame
+     through. */
+  transform: scale(var(--photo-scale, 1));
+}
+
+/* Scrimmed for the same reason the arrows are: the model shot's white studio
+   wall runs under this corner, and `--ash` on white is barely there. The scrim
+   gives it a consistent dark ground on every view, which lets it use the
+   brighter `--paper-dim` token new copy is supposed to use. */
+.product-frame-tag {
+  position: absolute;
+  left: 0.75rem;
+  bottom: 0.7rem;
+  padding: 0.3rem 0.5rem;
+  background: rgba(11, 11, 12, 0.62);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  color: var(--paper-dim);
+}
+
+/* The hero's `.arrow-next` circle, doubled and moved inside the frame. The one
+   deviation is the background: the hero's arrow floats over the void and can be
+   transparent, these sit on the photographs — including the model shot's white
+   studio wall — so they carry a scrim to stay legible on either. */
+.product-nav {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(237, 233, 226, 0.22);
+  border-radius: 999px;
+  background: rgba(11, 11, 12, 0.55);
+  color: var(--paper);
+  cursor: pointer;
+  transition: border-color 200ms ease, background 200ms ease, transform 200ms ease;
+}
+
+.product-nav svg {
+  width: 18px;
+  height: 18px;
+}
+
+.product-nav-prev {
+  left: 0.75rem;
+}
+
+.product-nav-next {
+  right: 0.75rem;
+}
+
+.product-nav:hover,
+.product-nav:focus-visible {
+  border-color: rgba(237, 233, 226, 0.55);
+  background: rgba(11, 11, 12, 0.8);
+}
+
+.product-nav-prev:hover {
+  transform: translateY(-50%) translateX(-2px);
+}
+
+.product-nav-next:hover {
+  transform: translateY(-50%) translateX(2px);
+}
+
+.product-thumbs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: clamp(0.65rem, 1.6vw, 1rem);
+}
+
+.product-thumb {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ash);
+  transition: color 200ms ease;
+}
+
+/* `cover`, not `contain`. The boxes were always the same square, but the model
+   shot is 0.75:1 against the cutouts' 1.19:1, so containing it letterboxed a
+   tall sliver between two nearly-full frames and the row read as ragged.
+   Filling all three crops the cutouts' sleeve tips by ~8% a side, which a
+   thumbnail can afford — the main frame still shows the whole garment. */
+.product-thumb img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background: var(--void);
+  border: 1px solid rgba(237, 233, 226, 0.08);
+  transition: border-color 200ms ease;
+}
+
+.product-thumb:hover,
+.product-thumb:focus-visible {
+  color: var(--paper);
+}
+
+.product-thumb:hover img,
+.product-thumb:focus-visible img {
+  border-color: rgba(237, 233, 226, 0.28);
+}
+
+.product-thumb-on {
+  color: var(--paper);
+}
+
+.product-thumb-on img {
+  border-color: var(--ember);
+}
+
+/* --- Specification -------------------------------------------------------- */
+.product-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.product-blurb {
+  max-width: 34ch;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--paper);
+}
+
+.product-specs {
+  margin-top: clamp(1.75rem, 4vh, 2.5rem);
+  border-top: 1px dotted rgba(255, 255, 255, 0.15);
+}
+
+.product-spec {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px dotted rgba(255, 255, 255, 0.15);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.product-spec dt {
+  flex: 0 0 auto;
+  min-width: 6.5rem;
+  color: var(--ash);
+}
+
+.product-spec dd {
+  color: var(--paper-dim);
+}
+
+.product-desc {
+  margin-top: clamp(1.5rem, 3.5vh, 2.25rem);
+  max-width: 46ch;
+  font-size: 0.9rem;
+  line-height: 1.75;
+  color: var(--paper-dim);
+}
+
+/* --- Colourway -----------------------------------------------------------
+   Only rendered for the two prints cut in a second colour — see `ColorSelect`.
+   Same construction as the sizes below: real radios, visually hidden, drawn as
+   circles instead of boxes. */
+.color-field {
+  margin-top: clamp(1.75rem, 4vh, 2.5rem);
+  padding: 0;
+  border: 0;
+}
+
+.color-legend {
+  padding: 0;
+  margin-bottom: 0.9rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+.color-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* 44px so the swatch is a real touch target — the coloured dot inside is well
+   under that on its own. The ember ring rides this box rather than the dot, so
+   the accent never touches the colour it is describing. */
+.color-opt {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: border-color 200ms ease;
+}
+
+.color-opt input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.color-opt:hover { border-color: rgba(237, 233, 226, 0.5); }
+
+/* The outline can't sit on the hidden input, so the ring wears it instead. */
+.color-opt:focus-within {
+  outline: 1px solid var(--paper);
+  outline-offset: 3px;
+}
+
+.color-opt-on { border-color: var(--ember); }
+
+/* The hairline is doing real work: without it the black swatch is a hole in the
+   void rather than a disc, and the white one glares. */
+.color-dot {
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  border: 1px solid rgba(237, 233, 226, 0.35);
+}
+
+.color-dot[data-color="black"] { background: #101012; }
+.color-dot[data-color="white"] { background: var(--paper); }
+
+/* --- Size ----------------------------------------------------------------
+   Real radios, visually hidden and drawn as boxes — see `ProductPurchase`.
+   Selected is ember, the same signal `.pip-on` and `.product-thumb-on` already
+   use for "this is the one you're on". */
+.size-field {
+  margin-top: clamp(1.75rem, 4vh, 2.5rem);
+  padding: 0;
+  border: 0;
+}
+
+/* Colour and size are one purchase block, so they sit closer to each other than
+   either does to the description above. */
+.color-field + .size-field {
+  margin-top: clamp(1.1rem, 2.5vh, 1.6rem);
+}
+
+.size-legend {
+  padding: 0;
+  margin-bottom: 0.9rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+.size-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.size-opt {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 3.25rem;
+  /* 44px so the boxes are a real touch target, not just a label. */
+  min-height: 44px;
+  padding: 0 0.8rem;
+  border: 1px solid rgba(237, 233, 226, 0.22);
+  color: var(--paper-dim);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  cursor: pointer;
+  transition: border-color 200ms ease, color 200ms ease;
+}
+
+/* Hidden but still focusable and still a radio — the keyboard behaviour and
+   the group semantics come from it, so it must not be `display: none`. */
+.size-opt input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.size-opt:hover {
+  border-color: rgba(237, 233, 226, 0.5);
+  color: var(--paper);
+}
+
+/* The outline can't sit on the hidden input, so the box wears it instead. */
+.size-opt:focus-within {
+  outline: 1px solid var(--paper);
+  outline-offset: 3px;
+}
+
+.size-opt-on {
+  border-color: var(--ember);
+  color: var(--ember);
+}
+
+/* `.view-toggle` at product scale — same border, tracking and ember hover, so
+   the one button on this page is visibly the same species as the one in the
+   hero. */
+.product-cart {
+  margin-top: clamp(1.75rem, 4vh, 2.5rem);
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 0.85rem 2.75rem;
+  background: transparent;
+  border: 1px solid rgba(237, 233, 226, 0.28);
+  color: var(--paper);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 200ms ease, color 200ms ease;
+}
+
+.product-cart:hover,
+.product-cart:focus-visible {
+  border-color: var(--ember);
+  color: var(--ember);
+}
+
+.product-note {
+  margin-top: 0.9rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  line-height: 1.9;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+.product-note-link {
+  color: var(--paper-dim);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(237, 233, 226, 0.24);
+  transition: color 200ms ease, border-color 200ms ease;
+}
+
+.product-note-link:hover {
+  color: var(--ember);
+  border-color: var(--ember);
+}
+
+.product-back {
+  margin-top: clamp(2rem, 5vh, 3rem);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ash);
+  text-decoration: none;
+  transition: color 200ms ease;
+}
+
+.product-back:hover {
+  color: var(--paper);
+}
+
+/* ---------------------------------------------------------------------------
+   Shop — RIOT
+
+   The catalogue thrown across the table, then filed back. Every scatter value
+   is a custom property set inline per card by ShopChaos; `.riot-on` is the only
+   thing that switches them on, so one class toggle animates the whole field
+   through a single transition. ORDER is the same markup with the variables
+   zeroed — the archival grid is the resting state, not a separate component.
+
+   Palette discipline holds: void, paper, one ember. The chaos is in the
+   geometry, never in the colour.
+--------------------------------------------------------------------------- */
+/* Escapes the 52rem measure. `.page-main` is centred (margin: 0 auto, symmetric
+   padding), so its content box shares the viewport's centre line and
+   `50% - 50vw` lands exactly on the left edge. Anchoring this to `.page-body`
+   instead would push it off-centre by half that column's width. */
+.page-bleed {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+}
+
+/* Top margin pulled in from `clamp(2.5rem, 6vh, 4rem)` so the category row
+   clears the fold instead of sitting just under it. Only this margin moved —
+   `.riot-bar` keeps its own bottom margin, so everything below the row holds
+   its existing spacing exactly. */
+.riot {
+  position: relative;
+  margin-top: clamp(1rem, 2.5vh, 1.75rem);
+  padding: 0 clamp(1rem, 5vw, 4rem);
+}
+
+.riot-bar {
+  display: flex;
+  align-items: baseline;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  margin-bottom: 3rem;
+}
+
+/* Category chips. Same shape the RIOT/ORDER control had — mono, bordered,
+   ember on hover — so the row reads as the same species as `.product-cart` and
+   `.size-opt` elsewhere on the site. */
+.riot-tab {
+  display: inline-grid;
+  place-items: center;
+  /* 44px min target, as the control this replaced had. */
+  min-height: 44px;
+  padding: 0.5rem 1.6rem;
+  background: transparent;
+  border: 1px solid rgba(237, 233, 226, 0.24);
+  color: var(--paper);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: border-color 220ms ease, color 220ms ease;
+}
+
+/* Hover belongs to the ones you can actually go to. */
+a.riot-tab:hover {
+  color: var(--ember);
+  border-color: var(--ember);
+}
+
+/* The category you're on. Ember, the same "this is the one you're on" signal
+   `.size-opt-on` and `.product-thumb-on` already use. */
+.riot-tab-on {
+  border-color: var(--ember);
+  color: var(--ember);
+}
+
+/* Three chips at full tracking overflow a narrow phone and wrap to two lines.
+   Tightening the padding and tracking keeps them on one. */
+@media (max-width: 480px) {
+  .riot-tab {
+    padding: 0.5rem 0.9rem;
+    letter-spacing: 0.16em;
+  }
+}
+
+/* --- Ticker ------------------------------------------------------------- */
+.riot-ticker {
+  overflow: hidden;
+  border-top: 1px solid rgba(237, 233, 226, 0.08);
+  border-bottom: 1px solid rgba(237, 233, 226, 0.08);
+  padding: 0.55rem 0;
+  margin: 0 calc(-1 * clamp(1rem, 5vw, 4rem));
+}
+
+.riot-ticker-track {
+  display: flex;
+  width: max-content;
+  gap: 2.5rem;
+  animation: riot-scroll 42s linear infinite;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ash);
+  white-space: nowrap;
+}
+
+.riot-ticker-rev .riot-ticker-track { animation-direction: reverse; }
+
+/* Only the riot state runs the ticker; ORDER holds it still. Unreachable while
+   the category nav occupies the bar — see the note in `ShopChaos`. */
+.riot:not(.riot-on) .riot-ticker-track { animation-play-state: paused; }
+
+@keyframes riot-scroll {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(calc(-50% - 1.25rem), 0, 0); }
+}
+
+/* --- The field ---------------------------------------------------------- */
+.riot-field {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: clamp(2rem, 5vw, 3.5rem);
+  padding: clamp(2.5rem, 7vh, 5rem) 0;
+}
+
+@media (min-width: 640px) {
+  .riot-field { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1024px) {
+  .riot-field { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+.riot-slot {
+  /* Perspective lives here so the plate inside gets real depth; the plate
+     itself must not own it, or the tilt flattens. */
+  perspective: 1100px;
+  transform: translate3d(var(--dx, 0), var(--dy, 0), 0) rotate(var(--rot, 0deg))
+    scale(var(--scale, 1));
+  transition: transform 720ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ORDER: every card back on the grid line. */
+.riot:not(.riot-on) .riot-slot {
+  --dx: 0%;
+  --dy: 0%;
+  --rot: 0deg;
+  --scale: 1;
+  --lift: 0px;
+  --tape-rot: 0deg;
+  --tag-rot: 0deg;
+}
+
+/* The card's click target, added in v14. It sits between the slot's
+   `perspective` and the plate's `preserve-3d`, so without a 3D style of its own
+   it would collapse the card's depth to a flat sticker — the tilt, the echo's
+   Z offset and the floating tags all read through this element. It contributes
+   nothing else: no box, no colour, no spacing. */
+.riot-link {
+  display: block;
+  transform-style: preserve-3d;
+  color: inherit;
+  text-decoration: none;
+}
+
+.riot-plate {
+  position: relative;
+  transform-style: preserve-3d;
+  transform: translateZ(var(--lift, 0px));
+  transition: transform 720ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.riot-shirt {
+  position: relative;
+  aspect-ratio: 544 / 458;
+  display: grid;
+  place-items: center;
+  background: var(--void);
+  border: 1px solid rgba(237, 233, 226, 0.1);
+  transform: translateZ(0);
+}
+
+/* Same correction the product gallery makes, for the same reason: the source
+   photos are cropped to different garment-to-frame ratios, so `contain` alone
+   renders the shirt at a different size on every card. `--photo-scale` comes
+   down from `.riot-slot`; see `src/data/photoScale.ts`.
+
+   No `overflow` is added to clip the overshoot, and none is needed — the fronts
+   are alpha cutouts, so what leaves the card is transparent. Clipping here would
+   also cost the echo its bloom. */
+.riot-shirt img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: scale(var(--photo-scale, 1));
+}
+
+/* The echo sits behind the shirt in Z. Tilting separates them, which is the
+   whole 3D read — a parallax gap you can see, not a drop shadow. */
+.riot-echo {
+  position: absolute;
+  inset: 0;
+  transform: translateZ(-70px) scale(1.06);
+  filter: blur(9px) saturate(0);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Matches `.riot-shirt img` exactly. The echo is the same photograph one layer
+   back, so it takes the same zoom or the two drift apart in size and read as two
+   garments instead of one. The `scale(1.06)` spread on `.riot-echo` above is
+   separate and untouched — that one is the bloom. */
+.riot-echo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: scale(var(--photo-scale, 1));
+  /* Ember, only as light thrown behind the garment. */
+  filter: brightness(0.5) sepia(1) hue-rotate(-18deg) saturate(3.2);
+}
+
+.riot-sheen {
+  position: absolute;
+  inset: 0;
+  transform: translateZ(2px);
+  background: linear-gradient(
+    115deg,
+    transparent 32%,
+    rgba(237, 233, 226, 0.07) 48%,
+    transparent 64%
+  );
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.riot-tape {
+  position: absolute;
+  top: -0.7rem;
+  left: 1.4rem;
+  transform: translateZ(52px) rotate(var(--tape-rot, 0deg));
+  padding: 0.25rem 0.9rem;
+  background: var(--ember);
+  color: var(--void);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  transition: transform 720ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.riot-tag {
+  position: absolute;
+  left: 0.9rem;
+  bottom: -1.15rem;
+  transform: translateZ(64px) rotate(var(--tag-rot, 0deg));
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.6rem 0.9rem;
+  background: var(--slate);
+  border: 1px solid rgba(237, 233, 226, 0.14);
+  transition: transform 720ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.riot-cat,
+.riot-ed {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ash);
+}
+
+.riot-name {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  /* 0.62 alpha on --void clears 4.5:1; the meta rows above/below are
+     supporting micro-type, not body copy. */
+  color: var(--paper);
+}
+
+.riot-blurb {
+  margin-top: 2.4rem;
+  max-width: 26ch;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: rgba(237, 233, 226, 0.55);
+}
+
+/* --- Reduced motion ------------------------------------------------------
+   Keep the collage — it is layout, not animation — but stop everything that
+   moves: no ticker, no eased re-flow, and ShopChaos never builds the tilt. */
+@media (prefers-reduced-motion: reduce) {
+  .riot-ticker-track { animation: none; }
+  .riot-slot,
+  .riot-plate,
+  .riot-tape,
+  .riot-tag { transition: none; }
 }
 
 /* ---------------------------------------------------------------------------
