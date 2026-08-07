@@ -117,22 +117,194 @@
 }
 
 /* ---------------------------------------------------------------------------
-   Hero
+   Hero — the poster, laid out as a collage
+
+   A fixed-ratio 1920x900 drawing, not a layout. `.poster-hero` is the only
+   element here with a size of its own; everything inside is positioned in
+   percentages of it, so the composition scales as one piece and can never
+   overflow. See `Hero.tsx` for why the bars sit *over* the plate.
+
+   The design-space pixel values are kept in the comments — they are what the
+   percentages were derived from, and the only way to re-derive them later.
 --------------------------------------------------------------------------- */
-.hero {
+.poster-hero {
   position: relative;
-  min-height: 100svh;
-  /* Positioning + stacking context for the framing layer beneath the content. */
+  width: 100%;
+  max-width: 1920px;
+  margin-inline: auto;
+  aspect-ratio: 1920 / 920;
+  overflow: hidden;
   isolation: isolate;
+  /* The plate's own ground, so any sliver the ratio leaves is invisible. */
+  background: #d8d8d8;
+  /* Makes `cqw` mean "percent of this canvas" for the type below. */
+  container-type: inline-size;
 }
 
-.hero-content {
-  position: relative;
-  z-index: 1;
-  min-height: 100svh;
+/* The photograph, inset rather than full-bleed.
+   ---------------------------------------------------------------------------
+   Full-bleed left the scene cramped: the composition runs y 130..811 of the
+   plate's own 900, so against the bars it had 30px of air above and 63 below.
+   The total slack is only 93px, which is why sliding it down could never fix
+   this — the most an even redistribution buys is ~46 a side. The picture has
+   to get smaller for the room to exist at all.
+   ---------------------------------------------------------------------------
+   At 90% the numbers land on the bars almost exactly, which is the reason for
+   these particular values rather than any round-number appeal:
+
+     plate height  900 * 0.9        = 810
+     top offset    64  ->  bottom   = 874, flush with `.poster-foot`
+     top edge      64                 sits 36px *under* `.poster-bar`
+
+   So both horizontal edges are covered by the bars and cannot seam. The
+   composition ends up with 81px above and 80px below — balanced, and nearly
+   triple the clearance it had.
+
+   That leaves the two vertical edges, where the plate is 1.5-2.6 levels off
+   the hero ground (measured, not guessed). Near-invisible already, but the
+   outer 4% is masked to a fade so there is nothing to catch the eye. It costs
+   no artwork: the outermost picture content is the left walker at ~25% across,
+   nowhere near the fade. Sizing the *asset* to do this instead would bake a
+   layout decision into a file, so it lives here. */
+.poster-plate {
+  position: absolute;
+  left: 5%;
+  top: 7.111%;
+  width: 90%;
+  height: auto;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 4%,
+    #000 96%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(to right, transparent 0%, #000 4%, #000 96%, transparent 100%);
+  user-select: none;
+}
+
+/* --- the bars ------------------------------------------------------------ */
+.poster-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  /* 100px of 900 */
+  height: 11.111%;
+  z-index: 3;
+  background: var(--void);
   display: flex;
   flex-direction: column;
-  padding: 0 clamp(1rem, 5vw, 4rem) clamp(1.5rem, 4vh, 2.75rem);
+  align-items: center;
+  justify-content: center;
+  gap: 0.55cqw;
+}
+
+.poster-caption {
+  margin: 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.68cqw;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+  /* Optical centring — the trailing letter-space would otherwise push it left. */
+  margin-right: -0.42em;
+  white-space: nowrap;
+}
+
+.poster-word {
+  margin: 0;
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 1.85cqw;
+  letter-spacing: 0.34em;
+  margin-right: -0.34em;
+  color: var(--paper);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Pinned to the bar's top-right corner. */
+.poster-logo {
+  position: absolute;
+  right: 1.46%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3.75cqw;
+  height: 3.75cqw;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center;
+  user-select: none;
+}
+
+/* 26px of 900 */
+.poster-foot {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2.889%;
+  z-index: 3;
+  background: var(--void);
+}
+
+/* --- small screens -------------------------------------------------------
+   A 2.133:1 canvas on a phone is a 180px-tall letterbox — the seated figure
+   would be about 60px tall in it. Below 768px the canvas turns portrait and
+   `cover` crops the plate to its centre, which is the figure; the passers-by
+   at the edges are what gets given up, and they are the part of the frame that
+   can afford to go.
+
+   768px is `useIsCompact`, not a number picked for this section: `ShapeField`
+   anchors the four nav shapes to the poster's box, so it has to switch to the
+   portrait ratio on exactly the same query this does. Change one, change both. */
+@media (max-width: 767px) {
+  .poster-hero {
+    aspect-ratio: 4 / 5;
+    max-width: none;
+  }
+
+  /* The inset above is a landscape-only move. In a 4:5 frame a 90%-wide plate
+     at natural height would cover barely half the canvas and leave the rest
+     bare ground, so portrait goes back to filling it and cropping to centre —
+     which is where the seated figure is. Nothing to seam, so no mask either. */
+  .poster-plate {
+    inset: 0;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .poster-bar {
+    height: 9%;
+    gap: 1.4cqw;
+  }
+
+  .poster-caption {
+    font-size: 2.1cqw;
+    letter-spacing: 0.3em;
+    margin-right: -0.3em;
+  }
+
+  .poster-word {
+    font-size: 5.4cqw;
+  }
+
+  .poster-logo {
+    width: 11cqw;
+    height: 11cqw;
+    right: 3.5%;
+  }
+
+  .poster-foot {
+    height: 2%;
+  }
 }
 
 /* Vertical divider rules flanking the hero — exhibition-hall "pillars".
@@ -676,15 +848,39 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  /* Supplied drawings are ink-on-paper; flip to paper-on-void. */
-  filter: invert(1);
+  /* Supplied drawings are ink-on-paper. Which way up they want to be depends
+     on what is behind them, and since v13 that changes mid-journey: the four
+     start stacked on the hero poster's light ground and end over the void
+     below it. `--ink` is 1 on the poster and 0 off it — written per frame by
+     ShapeField, which is the only thing that knows where each shape is — so
+     ink stays ink on the poster and flips to paper on the way out.
+
+     The second stage grounds them. Flat stipple on a flat light ground has no
+     cue for which plane it is on, and the four read as stickers; a soft
+     contact shadow puts them just above the poster. It is keyed to `--ink`
+     for the obvious reason — a dark shadow over the void below is invisible
+     at best — and comes after the invert so it is cast from the alpha
+     silhouette, which inverting does not touch. */
+  filter: invert(calc(1 - var(--ink, 0)))
+    drop-shadow(0 6px 10px rgba(11, 11, 12, calc(0.3 * var(--ink, 0))));
   opacity: 0.88;
   user-select: none;
 }
 
+/* The glow has the same problem as the artwork, so it is two shadows that
+   trade places across `--ink`: a dark halo while the shape is on the poster,
+   a paper one once it is over the void. Inverting the plate here as well
+   would double-invert against the rule above and flip the shape back to the
+   ground it is standing on — which on the poster means white on near-white. */
 .nav-shape:hover .nav-shape-plate,
 .nav-shape:focus-visible .nav-shape-plate {
-  filter: invert(1) drop-shadow(0 0 16px rgba(237, 233, 226, 0.3));
+  filter: drop-shadow(0 0 14px rgba(11, 11, 12, calc(0.34 * var(--ink, 0))))
+    drop-shadow(0 0 16px rgba(237, 233, 226, calc(0.3 * (1 - var(--ink, 0)))));
+}
+
+.nav-shape:hover .nav-shape-plate img,
+.nav-shape:focus-visible .nav-shape-plate img {
+  opacity: 1;
 }
 
 /* --- The spider ----------------------------------------------------------
@@ -787,7 +983,14 @@
   letter-spacing: 0.28em;
   text-transform: uppercase;
   white-space: nowrap;
+  /* Same problem the artwork has, same solution. Paper-coloured type is
+     invisible on the poster's light ground, and the labels *can* be over it:
+     with `prefers-reduced-motion` the row is assembled at full opacity from
+     the first frame, while the poster still fills the viewport. The plain
+     declaration is the fallback for browsers without `color-mix` — those
+     keep the old paper, which is only wrong in the reduced-motion case. */
   color: var(--paper);
+  color: color-mix(in srgb, var(--void) calc(var(--ink, 0) * 100%), var(--paper));
   opacity: var(--lo, 0);
 }
 

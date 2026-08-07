@@ -9,10 +9,16 @@ import { useIsCompact, usePrefersReducedMotion } from "@/lib/hooks";
 /**
  * The four shapes as a fixed overlay, driven directly by scroll position.
  *
- * On load they sit scattered around the shirt at their loose hero anchors. As
- * you scroll they converge — smoothly, tied to scroll — into a centered,
- * evenly-spaced row ("Four ways in"), labels fading in as they line up, and
- * hold there as the destination.
+ * On load they stack in a single column down the right-hand side of the hero
+ * poster, in the order they will end up in. As you scroll they converge —
+ * smoothly, tied to scroll — into a centered, evenly-spaced row ("Four ways
+ * in"), labels fading in as they line up, and hold there as the destination.
+ * So the gesture is a column tipping over into a row: same four, same order,
+ * turned through ninety degrees.
+ *
+ * v13.2 moved them here from four loose anchors scattered around the old ASCII
+ * shirt. Those were placed against a garment that no longer exists, and two of
+ * them sat over the poster's left-hand walking figure.
  *
  * The overlay is *pinned*, not permanently fixed: `.shape-field` is
  * `position: sticky` inside `.shape-track` (see `page.tsx`), so it holds at the
@@ -35,7 +41,43 @@ import { useIsCompact, usePrefersReducedMotion } from "@/lib/hooks";
  */
 const DESKTOP = { size: 118, rowScale: 0.9, rowGap: 224, rowY: 0.5 };
 const COMPACT = { size: 58, rowScale: 0.92, rowGapFrac: 0.2, rowY: 0.5 };
-const PARALLAX = 26; // px peak cursor-driven drift
+
+/**
+ * The hero poster's box, mirrored from `.poster-hero` in `globals.css`.
+ *
+ * The scattered anchors are fractions of *this*, not of the viewport, because
+ * the poster is a fixed-ratio drawing that is capped at 1920 and centred — so
+ * on a wide monitor "the right side of the poster" and "the right side of the
+ * window" are hundreds of pixels apart, and only the first one is meaningful.
+ * The column would drift off the artwork exactly on the screens with the most
+ * room to get it right.
+ *
+ * Top is 0: `.shape-under` pulls the hero to the top of the page and the field
+ * is pinned at `top: 0`, so at the scroll position where these anchors are
+ * actually on screen, the poster's top edge and the field's are the same line.
+ *
+ * `ratio` is width/height, matching the CSS `aspect-ratio` shorthand, and the
+ * compact pair is the `max-width: 767px` branch — same query as `useIsCompact`.
+ */
+const POSTER = { maxW: 1920, ratio: 1920 / 900, compactRatio: 4 / 5 };
+/**
+ * Idle and cursor motion, v18: roughly a third of what it was.
+ *
+ * The shapes used to be lively — they were competing with an ASCII dissolve
+ * for attention. Against a still photograph they only needed to not be dead,
+ * and anything more read as fidgeting. Every amplitude below is tuned to be
+ * noticed only if you look for it: the drift should register as the page
+ * breathing, never as something moving.
+ *
+ * `FOLLOW` is the cursor easing. Lowering it does double duty — the shapes
+ * both travel less far (PARALLAX) and take longer to get there, so a flick of
+ * the mouse produces a slow lean rather than a snap.
+ */
+const PARALLAX = 9; // px peak cursor-driven drift (was 26)
+const FOLLOW = 0.035; // cursor easing per frame (was 0.06)
+const BOB = 3; // px vertical idle travel (was 9)
+const SWAY = 2; // px horizontal idle travel (was 6)
+const TILT = { x: 3, y: 4.5, z: 1.5 }; // deg idle rotation (was 9 / 14 / 4)
 const DEPTHS = [1.15, 0.7, 1.35, 0.85]; // per-shape depth, aligned to NAV_ITEMS
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -88,18 +130,37 @@ export default function ShapeField() {
       const m = isCompact ? COMPACT : DESKTOP;
       const vh = view.h || 1;
 
-      const P = window.scrollY / vh;
+      // Read once — every access can force the browser to flush layout.
+      const scrolled = window.scrollY;
+      const P = scrolled / vh;
       const converge = still ? 1 : smoothstep(0, 0.7, P);
       const t = now / 1000;
       const gap = isCompact ? view.w * COMPACT.rowGapFrac : DESKTOP.rowGap;
       const rowY = vh * m.rowY;
 
+      // The poster's box, for the scattered anchors to hang off. The row they
+      // converge into stays viewport-centred — that one is a navigation bar,
+      // not part of the picture.
+      // `max-width` is lifted on the compact branch, so only desktop caps.
+      const posterW = isCompact ? view.w : Math.min(view.w, POSTER.maxW);
+      const posterH = posterW / (isCompact ? POSTER.compactRatio : POSTER.ratio);
+      const posterLeft = (view.w - posterW) / 2;
+
+      /**
+       * Viewport y of the poster's light ground where it ends — the top of the
+       * bottom black bar, not the bottom of the poster, so a shape crossing the
+       * bar has already flipped by the time it is over black. Shapes above this
+       * line are on a light ground and must stay ink; below it they are over
+       * the void and must be paper. See `--ink` in `globals.css`.
+       */
+      const groundEnd = posterH * (isCompact ? 0.98 : 0.97111) - scrolled;
+
       // Cursor parallax (desktop only), eased toward the pointer.
       const parallaxOn = !isCompact && !still;
       const cs = cursorSmooth.current;
       if (parallaxOn) {
-        cs.x += (cursor.current.x - cs.x) * 0.06;
-        cs.y += (cursor.current.y - cs.y) * 0.06;
+        cs.x += (cursor.current.x - cs.x) * FOLLOW;
+        cs.y += (cursor.current.y - cs.y) * FOLLOW;
       } else {
         cs.x = 0.5;
         cs.y = 0.5;
@@ -119,13 +180,13 @@ export default function ShapeField() {
         if (!shell) continue;
 
         const anchor = isCompact ? item.heroMobile : item.hero;
-        const heroX = view.w * anchor.x;
-        const heroY = vh * anchor.y;
+        const heroX = posterLeft + posterW * anchor.x;
+        const heroY = posterH * anchor.y;
         const rowX = view.w / 2 + (item.rowOrder - (NAV_ITEMS.length - 1) / 2) * gap;
 
         const floatAmt = still ? 0 : 1 - converge;
-        const bob = Math.sin(t * item.speed * 2 + item.phase) * 9 * floatAmt;
-        const sway = Math.cos(t * item.speed * 1.4 + item.phase) * 6 * floatAmt;
+        const bob = Math.sin(t * item.speed * 2 + item.phase) * BOB * floatAmt;
+        const sway = Math.cos(t * item.speed * 1.4 + item.phase) * SWAY * floatAmt;
 
         const depth = DEPTHS[i % DEPTHS.length];
         const parX = px * PARALLAX * depth * parallaxScale;
@@ -137,14 +198,20 @@ export default function ShapeField() {
 
         shell.style.transform = `translate3d(${x - m.size / 2}px, ${y - m.size / 2}px, 0) scale(${scale})`;
         shell.style.setProperty("--lo", String(converge));
+        // 1 on the poster's light ground, 0 over the void. The band is narrow
+        // so the flip reads as a flip rather than a fade through flat grey.
+        shell.style.setProperty(
+          "--ink",
+          String(1 - smoothstep(groundEnd - 46, groundEnd + 14, y)),
+        );
 
         if (plate) {
           if (still) {
             plate.style.transform = "";
           } else {
-            const rx = Math.sin(t * item.speed * 1.7 + item.phase) * 9 * floatAmt;
-            const ry = Math.cos(t * item.speed * 1.3 + item.phase * 0.7) * 14 * floatAmt;
-            const rz = Math.sin(t * item.speed * 0.9 + item.phase * 1.4) * 4 * floatAmt;
+            const rx = Math.sin(t * item.speed * 1.7 + item.phase) * TILT.x * floatAmt;
+            const ry = Math.cos(t * item.speed * 1.3 + item.phase * 0.7) * TILT.y * floatAmt;
+            const rz = Math.sin(t * item.speed * 0.9 + item.phase * 1.4) * TILT.z * floatAmt;
             plate.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg) rotateZ(${rz}deg)`;
           }
         }
