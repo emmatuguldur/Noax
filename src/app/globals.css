@@ -1786,6 +1786,159 @@
 
 .contact-link:hover { color: var(--ember); border-color: var(--ember); }
 
+/* --- The enquiry form ------------------------------------------------------
+   Restored after the origin/subedei merge dropped all nine of these rules
+   while keeping the `<ContactForm />` that uses them — the same resolution
+   fault that took out `.page-cutting-bg`. Unstyled, the form still submits,
+   but it renders as raw browser controls: white boxes on the void, and the
+   floating labels sit on top of their own inputs because nothing positions
+   them.
+
+   Recovered verbatim from 5f49c13 rather than rewritten, so this is the form
+   as it was designed rather than my reconstruction of it. */
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 34rem;
+  margin-top: 0.5rem;
+  padding: clamp(1.5rem, 3vw, 2.25rem);
+  border: 1px solid rgba(237, 233, 226, 0.1);
+  border-radius: 6px;
+  background: linear-gradient(165deg, rgba(237, 233, 226, 0.035), rgba(201, 96, 26, 0.02));
+  backdrop-filter: blur(2px);
+}
+
+.contact-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+@media (max-width: 30rem) {
+  .contact-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.contact-field {
+  position: relative;
+}
+
+.contact-input {
+  width: 100%;
+  background: rgba(11, 11, 12, 0.55);
+  border: 1px solid rgba(237, 233, 226, 0.14);
+  border-radius: 3px;
+  padding: 1.15rem 0.9rem 0.5rem;
+  color: var(--paper);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  transition:
+    border-color 200ms ease,
+    background 200ms ease,
+    box-shadow 200ms ease;
+}
+
+/* The label is the visible prompt, so the placeholder only exists to drive
+   `:placeholder-shown` — it must never be seen. */
+.contact-input::placeholder {
+  color: transparent;
+}
+
+.contact-input:focus {
+  outline: none;
+  border-color: var(--ember);
+  background: rgba(201, 96, 26, 0.05);
+  box-shadow: 0 0 0 3px rgba(201, 96, 26, 0.12);
+}
+
+.contact-textarea {
+  resize: vertical;
+  min-height: 7.5rem;
+}
+
+/* Floating label: rests inside the field until focused or filled, then
+   lifts into the top of the input — keeps the field a single compact
+   element instead of a label + input pair. */
+.contact-label {
+  position: absolute;
+  left: 0.9rem;
+  top: 0.85rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ash);
+  pointer-events: none;
+  transition:
+    transform 180ms ease,
+    font-size 180ms ease,
+    color 180ms ease;
+  transform-origin: left top;
+}
+
+.contact-input:focus + .contact-label,
+.contact-input:not(:placeholder-shown) + .contact-label {
+  transform: translateY(-0.55rem);
+  font-size: 9px;
+  letter-spacing: 0.24em;
+}
+
+.contact-input:focus + .contact-label {
+  color: var(--ember);
+}
+
+.contact-submit {
+  align-self: flex-start;
+  border: 1px solid rgba(237, 233, 226, 0.24);
+  background: transparent;
+  color: var(--paper);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  padding: 0.85rem 1.75rem;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-top: 0.25rem;
+  transition:
+    border-color 200ms ease,
+    color 200ms ease,
+    background 200ms ease;
+}
+
+.contact-submit:hover:not(:disabled) {
+  border-color: var(--ember);
+  color: var(--ember);
+  background: rgba(201, 96, 26, 0.06);
+}
+
+.contact-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.contact-form-status {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  color: var(--paper);
+  max-width: 30rem;
+  padding: 1.5rem;
+  border: 1px solid rgba(201, 96, 26, 0.3);
+  border-radius: 6px;
+  background: rgba(201, 96, 26, 0.06);
+}
+
+.contact-form-status-error {
+  color: var(--ember);
+  padding: 0;
+  border: none;
+  background: none;
+}
+
 /* ---------------------------------------------------------------------------
    Legal — /terms and /privacy
 
