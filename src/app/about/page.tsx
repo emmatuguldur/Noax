@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 
 import PageShell from "@/components/PageShell";
 
-export const metadata: Metadata = { title: "About — N.O.U.X" };
+export const metadata: Metadata = { title: "About — N.O.A.X" };
 
 export default function AboutPage() {
   return (
     <PageShell eyebrow="About" title="A stack of drawings that needed to leave the studio.">
       <p>
-        N.O.U.X began as stipple work that took too long to be worth framing.
+        N.O.A.X began as stipple work that took too long to be worth framing.
         Printing it was the only way to get it out of the room.
       </p>
       <p>

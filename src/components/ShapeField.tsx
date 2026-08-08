@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 
 import NavShape from "@/components/NavShape";
 import { NAV_ITEMS } from "@/data/navItems";
+import { CuttingAnimator } from "@/lib/cutting";
 import { useIsCompact, usePrefersReducedMotion } from "@/lib/hooks";
 
 /**
@@ -94,6 +95,8 @@ export default function ShapeField() {
   const fieldRef = useRef<HTMLElement | null>(null);
   const shellRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const plateRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const cuttingRef = useRef<CuttingAnimator | null>(null);
 
   const compactRef = useRef(compact);
   compactRef.current = compact;
@@ -117,10 +120,23 @@ export default function ShapeField() {
   useEffect(() => {
     let frame = 0;
     const view = { w: window.innerWidth, h: window.innerHeight };
+    if (!cuttingRef.current) cuttingRef.current = new CuttingAnimator();
+
+    const ctx = canvasRef.current?.getContext("2d") ?? null;
+    let dpr = Math.min(window.devicePixelRatio || 1, 2);
+
     const measure = () => {
       view.w = window.innerWidth;
       view.h = window.innerHeight;
+      const canvas = canvasRef.current;
+      if (canvas && ctx) {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.ceil(view.w * dpr);
+        canvas.height = Math.ceil(view.h * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
     };
+    measure();
     window.addEventListener("resize", measure, { passive: true });
     window.addEventListener("orientationchange", measure);
 
@@ -171,6 +187,11 @@ export default function ShapeField() {
 
       if (fieldRef.current) {
         fieldRef.current.style.setProperty("--assembled", String(converge));
+      }
+
+      if (ctx && canvasRef.current) {
+        ctx.clearRect(0, 0, view.w, view.h);
+        cuttingRef.current?.draw(ctx, view.w, view.h, now, null, converge, still);
       }
 
       for (let i = 0; i < NAV_ITEMS.length; i += 1) {
@@ -230,6 +251,7 @@ export default function ShapeField() {
 
   return (
     <nav ref={fieldRef} className="shape-field" aria-label="Explore">
+      <canvas ref={canvasRef} className="shape-field-cutting" aria-hidden="true" />
       <p className="shape-field-eyebrow">Four ways in</p>
 
       {/* Lowers itself into the room as the shapes line up. Opacity and drop
