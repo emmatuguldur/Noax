@@ -8,59 +8,30 @@ import { CuttingAnimator } from "@/lib/cutting";
 import { useIsCompact, usePrefersReducedMotion } from "@/lib/hooks";
 
 /**
- * The four shapes as a fixed overlay, driven directly by scroll position.
+ * The four shapes, as an ordinary section of the page.
  *
- * On load they stack in a single column down the right-hand side of the hero
- * poster, in the order they will end up in. As you scroll they converge —
- * smoothly, tied to scroll — into a centered, evenly-spaced row ("Four ways
- * in"), labels fading in as they line up, and hold there as the destination.
- * So the gesture is a column tipping over into a row: same four, same order,
- * turned through ninety degrees.
+ * A centred, evenly-spaced row under "Four ways in". It is always there — you
+ * reach it by scrolling to it, the same as any other section. Flexbox lays the
+ * row out (see `.shape-row`); the only thing this component does is add the
+ * small motion on top.
  *
- * v13.2 moved them here from four loose anchors scattered around the old ASCII
- * shirt. Those were placed against a garment that no longer exists, and two of
- * them sat over the poster's left-hand walking figure.
+ * Three rounds of subtraction got it here, and the order is worth knowing:
+ * v24 took the shapes off the hero, which removed the journey they used to
+ * make; v25 removed the scroll-triggered entrance, which removed the arrival.
+ * With neither a journey nor an arrival there was nothing left to pin, so the
+ * sticky overlay and its scaffolding (`.shape-track`, `.shape-under`'s
+ * `-100svh`, `.shape-rail`) went too — along with scroll position, convergence,
+ * `--reveal`, `--assembled` and `--lo`. The row can no longer appear over the
+ * hero by construction rather than by a gate someone has to maintain.
  *
- * The overlay is *pinned*, not permanently fixed: `.shape-field` is
- * `position: sticky` inside `.shape-track` (see `page.tsx`), so it holds at the
- * top of the viewport for the length of the track and then releases and scrolls
- * away with the page, like any other section. Sticky containment guarantees its
- * box can never extend past the track's bottom edge, which is exactly where the
- * material section starts — so it structurally cannot overlap what follows.
- * v12 needed an opacity fade plus `inert` to fake that; both are gone.
- *
- * Everything here writes viewport-space numbers, and that stays correct through
- * the release: while pinned, the field's box *is* the viewport, and once it
- * releases the shapes travel with the box they're positioned inside.
- *
- * On desktop the shapes also drift on independent depths in response to the
- * cursor (a small parallax), layered on top of the idle rotation — strongest
- * while they're scattered, calmer once they've lined up.
- *
- * Progress is read straight from window.scrollY / viewport height (Lenis keeps
- * that accurate), so it's deterministic. One rAF loop writes every transform.
+ * What is left is what was asked to stay: a slow idle drift and an independent
+ * per-shape lean toward the cursor. One rAF loop writes both, as an offset from
+ * wherever layout has already put each shape — so a dropped frame costs a nudge
+ * rather than a position.
  */
-const DESKTOP = { size: 118, rowScale: 0.9, rowGap: 224, rowY: 0.5 };
-const COMPACT = { size: 58, rowScale: 0.92, rowGapFrac: 0.2, rowY: 0.5 };
+const DESKTOP = { size: 106 };
+const COMPACT = { size: 53 };
 
-/**
- * The hero poster's box, mirrored from `.poster-hero` in `globals.css`.
- *
- * The scattered anchors are fractions of *this*, not of the viewport, because
- * the poster is a fixed-ratio drawing that is capped at 1920 and centred — so
- * on a wide monitor "the right side of the poster" and "the right side of the
- * window" are hundreds of pixels apart, and only the first one is meaningful.
- * The column would drift off the artwork exactly on the screens with the most
- * room to get it right.
- *
- * Top is 0: `.shape-under` pulls the hero to the top of the page and the field
- * is pinned at `top: 0`, so at the scroll position where these anchors are
- * actually on screen, the poster's top edge and the field's are the same line.
- *
- * `ratio` is width/height, matching the CSS `aspect-ratio` shorthand, and the
- * compact pair is the `max-width: 767px` branch — same query as `useIsCompact`.
- */
-const POSTER = { maxW: 1920, ratio: 1920 / 900, compactRatio: 4 / 5 };
 /**
  * Idle and cursor motion, v18: roughly a third of what it was.
  *
@@ -81,18 +52,10 @@ const SWAY = 2; // px horizontal idle travel (was 6)
 const TILT = { x: 3, y: 4.5, z: 1.5 }; // deg idle rotation (was 9 / 14 / 4)
 const DEPTHS = [1.15, 0.7, 1.35, 0.85]; // per-shape depth, aligned to NAV_ITEMS
 
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
-
-function smoothstep(edge0: number, edge1: number, x: number): number {
-  const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
-  return t * t * (3 - 2 * t);
-}
-
 export default function ShapeField() {
   const compact = useIsCompact();
   const reduceMotion = usePrefersReducedMotion();
 
-  const fieldRef = useRef<HTMLElement | null>(null);
   const shellRefs = useRef<(HTMLAnchorElement | null)[]>([]);
   const plateRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -143,33 +106,7 @@ export default function ShapeField() {
     const draw = (now: number) => {
       const still = reduceRef.current;
       const isCompact = compactRef.current;
-      const m = isCompact ? COMPACT : DESKTOP;
-      const vh = view.h || 1;
-
-      // Read once — every access can force the browser to flush layout.
-      const scrolled = window.scrollY;
-      const P = scrolled / vh;
-      const converge = still ? 1 : smoothstep(0, 0.7, P);
       const t = now / 1000;
-      const gap = isCompact ? view.w * COMPACT.rowGapFrac : DESKTOP.rowGap;
-      const rowY = vh * m.rowY;
-
-      // The poster's box, for the scattered anchors to hang off. The row they
-      // converge into stays viewport-centred — that one is a navigation bar,
-      // not part of the picture.
-      // `max-width` is lifted on the compact branch, so only desktop caps.
-      const posterW = isCompact ? view.w : Math.min(view.w, POSTER.maxW);
-      const posterH = posterW / (isCompact ? POSTER.compactRatio : POSTER.ratio);
-      const posterLeft = (view.w - posterW) / 2;
-
-      /**
-       * Viewport y of the poster's light ground where it ends — the top of the
-       * bottom black bar, not the bottom of the poster, so a shape crossing the
-       * bar has already flipped by the time it is over black. Shapes above this
-       * line are on a light ground and must stay ink; below it they are over
-       * the void and must be paper. See `--ink` in `globals.css`.
-       */
-      const groundEnd = posterH * (isCompact ? 0.98 : 0.97111) - scrolled;
 
       // Cursor parallax (desktop only), eased toward the pointer.
       const parallaxOn = !isCompact && !still;
@@ -183,26 +120,13 @@ export default function ShapeField() {
       }
       const px = (cs.x - 0.5) * 2;
       const py = (cs.y - 0.5) * 2;
-      const parallaxScale = 1 - converge * 0.65; // strongest while scattered
 
-      if (fieldRef.current) {
-        fieldRef.current.style.setProperty("--assembled", String(converge));
-      }
-
-      /**
-       * The cutting backdrop belongs to the shape row, so it is keyed to the
-       * poster clearing the viewport — not to `converge`, which starts rising
-       * on the very first pixel of scroll and so had the scissors drawing
-       * across the photograph while it was still on screen. The row finishes
-       * assembling at scrollY = 0.7 * vh, well before this ramp opens, so by
-       * the time anything is being cut the four are already in place under
-       * "Four ways in".
-       */
-      const cutting = smoothstep(posterH * 0.9, posterH * 1.3, scrolled);
-
+      // The backdrop is simply on whenever the section is. It used to be ramped
+      // by scroll to keep it off the hero; the section being its own box in
+      // normal flow does that job now, and does it exactly.
       if (ctx && canvasRef.current) {
         ctx.clearRect(0, 0, view.w, view.h);
-        cuttingRef.current?.draw(ctx, view.w, view.h, now, null, cutting, still);
+        cuttingRef.current?.draw(ctx, view.w, view.h, now, null, 1, still);
       }
 
       for (let i = 0; i < NAV_ITEMS.length; i += 1) {
@@ -211,31 +135,18 @@ export default function ShapeField() {
         const plate = plateRefs.current[i];
         if (!shell) continue;
 
-        const anchor = isCompact ? item.heroMobile : item.hero;
-        const heroX = posterLeft + posterW * anchor.x;
-        const heroY = posterH * anchor.y;
-        const rowX = view.w / 2 + (item.rowOrder - (NAV_ITEMS.length - 1) / 2) * gap;
-
-        const floatAmt = still ? 0 : 1 - converge;
+        // v18 amplitudes, unchanged — tuned to be noticed only if you look for
+        // them. These are offsets from the position flexbox has already given
+        // the shape, not the position itself.
+        const floatAmt = still ? 0 : 1;
         const bob = Math.sin(t * item.speed * 2 + item.phase) * BOB * floatAmt;
         const sway = Math.cos(t * item.speed * 1.4 + item.phase) * SWAY * floatAmt;
 
         const depth = DEPTHS[i % DEPTHS.length];
-        const parX = px * PARALLAX * depth * parallaxScale;
-        const parY = py * PARALLAX * depth * parallaxScale;
+        const parX = px * PARALLAX * depth;
+        const parY = py * PARALLAX * depth;
 
-        const x = lerp(heroX + sway, rowX, converge) + parX;
-        const y = lerp(heroY + bob, rowY, converge) + parY;
-        const scale = lerp(1, m.rowScale, converge);
-
-        shell.style.transform = `translate3d(${x - m.size / 2}px, ${y - m.size / 2}px, 0) scale(${scale})`;
-        shell.style.setProperty("--lo", String(converge));
-        // 1 on the poster's light ground, 0 over the void. The band is narrow
-        // so the flip reads as a flip rather than a fade through flat grey.
-        shell.style.setProperty(
-          "--ink",
-          String(1 - smoothstep(groundEnd - 46, groundEnd + 14, y)),
-        );
+        shell.style.transform = `translate3d(${sway + parX}px, ${bob + parY}px, 0)`;
 
         if (plate) {
           if (still) {
@@ -261,33 +172,33 @@ export default function ShapeField() {
   }, []);
 
   return (
-    <nav ref={fieldRef} className="shape-field" aria-label="Explore">
+    <nav className="shape-field" aria-label="Explore">
       <canvas ref={canvasRef} className="shape-field-cutting" aria-hidden="true" />
       <p className="shape-field-eyebrow">Four ways in</p>
 
-      {/* Lowers itself into the room as the shapes line up. Opacity and drop
-          are both read from `--assembled` in CSS — the same 0..1 the eyebrow
-          uses — so it costs nothing per frame and can't drift out of sync
-          with the row. The sway is on the artwork inside, because this
-          element's transform is already spoken for by the drop. */}
+      {/* A detail beside the row, hanging from the top of the section. Its two
+          idle loops live on the artwork inside, so this element's own transform
+          stays free. */}
       <span className="shape-spider" aria-hidden="true">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/decor/spider-hanging.png" alt="" className="shape-spider-art" />
       </span>
 
-      {NAV_ITEMS.map((item, i) => (
-        <NavShape
-          key={item.id}
-          item={item}
-          size={compact ? COMPACT.size : DESKTOP.size}
-          shellRef={(el) => {
-            shellRefs.current[i] = el;
-          }}
-          plateRef={(el) => {
-            plateRefs.current[i] = el;
-          }}
-        />
-      ))}
+      <div className="shape-row">
+        {NAV_ITEMS.map((item, i) => (
+          <NavShape
+            key={item.id}
+            item={item}
+            size={compact ? COMPACT.size : DESKTOP.size}
+            shellRef={(el) => {
+              shellRefs.current[i] = el;
+            }}
+            plateRef={(el) => {
+              plateRefs.current[i] = el;
+            }}
+          />
+        ))}
+      </div>
     </nav>
   );
 }

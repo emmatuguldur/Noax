@@ -1120,72 +1120,67 @@
    loose hero anchors around the shirt; scrolling drags them into the row, which
    is the destination — there is no docked navbar.
 --------------------------------------------------------------------------- */
-/* The pin. See `page.tsx` for why the track is shaped this way. */
-.shape-track {
-  position: relative;
-}
+/* An ordinary section. v25 removed the scroll-triggered entrance, and with
+   nothing left to reveal there was nothing left to pin: the sticky overlay,
+   the `.shape-track` wrapper, the `-100svh` pull-up on `.shape-under` and the
+   `.shape-rail` that bought scroll distance are all gone. The row is laid out
+   by flexbox and is simply on the page, like the material section under it.
 
-/* Pulled back up by exactly the field's height, so the hero still starts at
-   the top of the page. The field has to be the track's *first* child for
-   sticky to hold it at the viewport top from the first frame — put the
-   negative margin on the field instead and it would break its own sticky
-   containment, because a negative bottom margin *extends* the rectangle it is
-   allowed to stick within, which is the one thing keeping it off the footer. */
-.shape-under {
-  margin-top: -100svh;
-}
-
-.shape-rail {
-  /* Scroll distance for the assemble and the hold. The field releases once its
-     bottom meets the track's, i.e. at `heroHeight + this - 100svh`. */
-  height: 150vh;
-  pointer-events: none;
-}
-
+   What that buys, besides the deletion: the four are real layout now, so they
+   stay put through resize without a frame of JS, and they cannot appear over
+   the hero by construction rather than by a gate that has to be maintained. */
 .shape-field {
-  position: sticky;
-  top: 0;
-  height: 100svh;
-  z-index: 40;
-  pointer-events: none;
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(2.5rem, 7vh, 5rem);
 }
 
-/* Absolute, not fixed: the field is its containing block and is exactly the
-   viewport while pinned, so this lands identically — but it now travels with
-   the field when it releases instead of staying stuck to the viewport. Same
-   reason applies to `.shape-spider`. */
+/* Covers the section it sits in. Absolute against `.shape-field`, which is
+   this canvas's containing block and the box the cutting animation is drawn
+   to. Same reason applies to `.shape-spider`. */
 .shape-field-cutting {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   display: block;
+  pointer-events: none;
 }
 
 .shape-field-eyebrow {
-  position: absolute;
-  top: calc(50% - clamp(7rem, 15vh, 10.5rem));
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
   margin: 0;
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 10px;
   letter-spacing: 0.34em;
+  /* Optical centring — the trailing letter-space would push it left. */
+  margin-right: -0.34em;
   text-transform: uppercase;
   color: var(--ash);
-  opacity: var(--assembled, 0);
-  pointer-events: none;
 }
 
-/* Positioned entirely by ShapeField's per-frame transform (viewport-space,
-   from the top-left of the fixed field). Inline width/height set the size. */
+/* The row itself. Centre spacing works out at the old 224px on desktop —
+   106px of shape plus 118px of gap — and collapses on narrow screens, where
+   the shapes are smaller too. */
+.shape-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.9rem, 6vw, 7.375rem);
+}
+
+/* A flex item, positioned by layout. ShapeField writes only the small idle
+   and cursor offsets on top, so a dropped frame costs a nudge rather than the
+   shape's whole position. `relative` is for the label hung underneath it. */
 .nav-shape {
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: relative;
   display: block;
   text-decoration: none;
-  pointer-events: auto;
   will-change: transform;
 }
 
@@ -1246,17 +1241,14 @@
 
 /* --- The spider ----------------------------------------------------------
    Moved here from the hero: it is no longer something you land on, it is
-   something the shape section brings with it. `--assembled` is the same 0..1
-   convergence the eyebrow reads, written once per frame by ShapeField, so the
-   spider lowers itself in exactly as the row forms and is fully absent at the
-   top of the page.
+   something the shape section brings with it. It used to lower itself in off
+   `--assembled` as the row converged; v25 removed the entrance, so it just
+   hangs.
 
-   Three motions, two elements. The wrapper owns the entrance drop, which is a
-   plain declaration driven by `--assembled`; the artwork owns the two idle
-   loops. They can share an element because they animate the *individual*
-   transform properties — `rotate` for the sway, `translate` for the bob —
-   rather than both fighting over the `transform` shorthand, which is what lets
-   them run on unrelated periods without a third wrapper div to hold one of
+   Two idle loops on one element. They can share it because they animate the
+   *individual* transform properties — `rotate` for the sway, `translate` for
+   the bob — rather than both fighting over the `transform` shorthand, which is
+   what lets them run on unrelated periods without a wrapper div to hold one of
    them. Anything that sets `transform` on `.shape-spider-art` breaks that. */
 .shape-spider {
   --spider-h: clamp(9rem, 24svh, 16rem);
@@ -1264,15 +1256,15 @@
   /* The thread starts 3.75% down the canvas; lifting the box by exactly that
      puts its top on the viewport's top edge, where a thread should start. */
   top: calc(var(--spider-h) * -0.0375);
-  /* Outboard of the assembled row, which reaches ~395px either side of centre
-     at its widest. */
+  /* Outboard of the row, which reaches ~395px either side of centre at its
+     widest. */
   right: 12%;
   height: var(--spider-h);
-  /* The row is the event; this is a detail beside it, so it lands quieter than
-     the shapes and never competes with the labels fading up under them. */
-  opacity: calc(var(--assembled, 0) * 0.16);
-  /* Lowers the last 34px as it arrives — it is on a thread, so it comes down. */
-  transform: translateY(calc((1 - var(--assembled, 0)) * -34px));
+  /* The row is the event; this is a detail beside it, so it sits quiet enough
+     never to compete with the labels under the shapes. It used to lower itself
+     into place off `--assembled`; with the entrance gone it is simply hanging
+     there, which is what a spider on a thread does anyway. */
+  opacity: 0.16;
   pointer-events: none;
 }
 
@@ -1330,8 +1322,8 @@
   }
 }
 
-/* Sits under the shape; its opacity is driven by --lo, which ShapeField ramps
-   up only as the shapes line up into the row. */
+/* Sits under the shape. It used to fade up off `--lo` as the row assembled;
+   with no assembly it is simply there. */
 .nav-shape-label {
   position: absolute;
   top: calc(100% + 0.65rem);
@@ -1344,19 +1336,17 @@
   letter-spacing: 0.28em;
   text-transform: uppercase;
   white-space: nowrap;
-  /* Same problem the artwork has, same solution. Paper-coloured type is
-     invisible on the poster's light ground, and the labels *can* be over it:
-     with `prefers-reduced-motion` the row is assembled at full opacity from
-     the first frame, while the poster still fills the viewport. The plain
-     declaration is the fallback for browsers without `color-mix` — those
-     keep the old paper, which is only wrong in the reduced-motion case. */
+  /* Follows `--ink` like the artwork does. Since v24 the row only ever appears
+     once the poster has left, so this resolves to paper in practice and the
+     plain declaration below is an exact fallback rather than an approximate
+     one. Kept because it is the same rule the shapes obey — it costs nothing
+     and stays correct if the row is ever shown against a light ground again. */
   color: var(--paper);
   color: color-mix(
     in srgb,
     var(--void) calc(var(--ink, 0) * 100%),
     var(--paper)
   );
-  opacity: var(--lo, 0);
 }
 
 /* ---------------------------------------------------------------------------
