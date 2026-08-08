@@ -6,42 +6,28 @@ import SiteFooter from "@/components/SiteFooter";
 import ViewportFrame from "@/components/ViewportFrame";
 
 /**
- * Homepage flow: hero → the shape row (shapes scatter, converge, hold, then
- * scroll away) → the material section → the footer. A hairline perimeter frame
- * and corner micro-type frame the viewport like an archival artifact.
+ * Homepage flow: hero → the shape row → the material section → the footer. A
+ * hairline perimeter frame and corner micro-type frame the viewport like an
+ * archival artifact.
  *
  * The film grain that used to sit over all of this (`GrainOverlay`, z-30) was
  * dropped in v23. The component and its `.grain` rule are both still here, so
  * putting it back is one import and one tag.
  *
- * The shape track is the one piece of structure worth explaining here.
- *
- * `.shape-field` is an overlay that has to cover the viewport from the very
- * first frame — the shapes start scattered *around the shirt*, so it is live
- * before you have scrolled at all — and then stop covering it once the row has
- * been assembled and held. That is a pin with a release, and `position: sticky`
- * is the mechanism: the field is the track's first child so it sticks from the
- * top of the page, and sticky containment means its box can never extend past
- * `.shape-track`'s bottom edge, which is exactly where `MaterialSection`
- * begins. The overlap is impossible by construction rather than timed away.
- *
- * The cost of that is one wrapper: sticky needs the field in normal flow, so
- * `.shape-under` is pulled back up by the field's own height to put the hero
- * back at the top of the page. Everything below the track is ordinary flow.
+ * This used to need explaining. The shape row was a pinned overlay — a sticky
+ * `.shape-field` wrapped in a `.shape-track`, with `.shape-under` dragged back
+ * up by a viewport height and a `.shape-rail` supplying scroll distance — all
+ * so the four shapes could start scattered over the hero and converge as you
+ * scrolled. v24 took them off the hero and v25 removed the entrance, and with
+ * nothing left to pin, the entire apparatus went with it. The shape row is now
+ * an ordinary section between two other ordinary sections, which is why there
+ * is nothing here to describe.
  */
 export default function Page() {
   return (
     <main>
-      <div className="shape-track">
-        <ShapeField />
-        <div className="shape-under">
-          <Hero />
-          {/* Scroll distance for the assemble and the hold; the field releases
-              when its bottom reaches the end of this. */}
-          <div className="shape-rail" aria-hidden="true" />
-        </div>
-      </div>
-
+      <Hero />
+      <ShapeField />
       <MaterialSection />
       <SiteFooter />
       <ViewportFrame />
