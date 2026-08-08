@@ -34,6 +34,14 @@ export const HERO_COPY = {
 
   /** The nudge at the bottom of the hero. */
   scrollHint: "Keep going",
+
+  /**
+   * The hero's one direct route to the shop. The four nav shapes already lead
+   * there, but they are a puzzle before they are a menu — this is the reading
+   * for someone who has just landed. Keep the word "shop" in it; the whole
+   * point is that it says what it does.
+   */
+  shopCta: "ENTER THE ARCHIVE",
 } as const;
 
 /**

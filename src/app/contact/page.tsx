@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import ContactForm from "@/components/ContactForm";
 import PageShell from "@/components/PageShell";
 import { LEGAL } from "@/data/legal";
 
@@ -25,7 +26,6 @@ export default function ContactPage() {
           rel="noreferrer noopener"
           target="_blank"
         >
-          {/* Lower-case house style for this page; `slice(1)` drops the `@`. */}
           instagram / {LEGAL.instagramHandle.slice(1)}
         </a>
       </div>
@@ -33,6 +33,7 @@ export default function ContactPage() {
         Studio in Ulaanbaatar, open by appointment. Stockist and wholesale enquiries are
         welcome at the same address.
       </p>
+      <ContactForm />
     </PageShell>
   );
 }
