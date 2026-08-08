@@ -1,5 +1,4 @@
 import CornerMarks from "@/components/CornerMarks";
-import GrainOverlay from "@/components/GrainOverlay";
 import Hero from "@/components/Hero";
 import MaterialSection from "@/components/MaterialSection";
 import ShapeField from "@/components/ShapeField";
@@ -8,9 +7,12 @@ import ViewportFrame from "@/components/ViewportFrame";
 
 /**
  * Homepage flow: hero → the shape row (shapes scatter, converge, hold, then
- * scroll away) → the material section → the footer. Grain textures the whole
- * page; a hairline perimeter frame and corner micro-type frame the viewport
- * like an archival artifact.
+ * scroll away) → the material section → the footer. A hairline perimeter frame
+ * and corner micro-type frame the viewport like an archival artifact.
+ *
+ * The film grain that used to sit over all of this (`GrainOverlay`, z-30) was
+ * dropped in v23. The component and its `.grain` rule are both still here, so
+ * putting it back is one import and one tag.
  *
  * The shape track is the one piece of structure worth explaining here.
  *
@@ -42,7 +44,6 @@ export default function Page() {
 
       <MaterialSection />
       <SiteFooter />
-      <GrainOverlay />
       <ViewportFrame />
       <CornerMarks />
     </main>

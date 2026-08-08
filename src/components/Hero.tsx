@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { HERO_COPY } from "@/data/copy";
 
 /**
@@ -53,6 +55,67 @@ export default function Hero() {
         fetchPriority="high"
         draggable={false}
       />
+
+      {/* The pin, in the empty ground left of the figure. Four layers, because
+          three of them have to be able to move on their own: the base carries
+          the pin, the wire script and the chains and never moves; each charm
+          is cut at the chain link it hangs from so it can swing about that
+          point. The tag sits *under* the base on purpose — the chain crosses
+          its top corner in the original photograph, and keeping the base in
+          front is what preserves that overlap while the tag swings behind it.
+          Decorative, so the whole thing is hidden from assistive tech. */}
+      <div className="hero-pin" aria-hidden="true">
+        <span className="pin-charm charm-tag">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/hero/charm-tag.png" alt="" width={172} height={183} draggable={false} />
+        </span>
+
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/hero/pin-base.png"
+          alt=""
+          className="pin-base"
+          width={300}
+          height={402}
+          draggable={false}
+        />
+
+        <span className="pin-charm charm-board">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/hero/charm-board.png" alt="" width={45} height={117} draggable={false} />
+        </span>
+
+        <span className="pin-charm charm-flower">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/hero/charm-flower.png" alt="" width={59} height={67} draggable={false} />
+        </span>
+      </div>
+
+      {/* The plain-language way in. The four nav shapes already reach /shop,
+          but they read as a puzzle before they read as a menu, so this is the
+          same destination stated outright. It sits under the pin rather than
+          centred because the only clear band across the middle is the 80px
+          between the boots and the foot bar — enough for one element, and the
+          scroll nudge has the better claim on it. */}
+      <Link href="/shop" className="poster-cta">
+        {HERO_COPY.shopCta}
+      </Link>
+
+      {/* Decorative: "keep going" is guidance for the eye, and a screen reader
+          is not scrolling to find the next section. */}
+      <div className="poster-scroll" aria-hidden="true">
+        <span className="poster-scroll-label">{HERO_COPY.scrollHint}</span>
+        <svg
+          className="poster-scroll-chev"
+          viewBox="0 0 18 9"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.3"
+          strokeLinecap="square"
+        >
+          <path d="M1 1 L9 7.6 L17 1" />
+        </svg>
+      </div>
 
       <div className="poster-bar">
         <p className="poster-caption stage stage-1">{HERO_COPY.overline}</p>

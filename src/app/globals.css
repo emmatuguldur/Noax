@@ -86,9 +86,15 @@
     animation: stageIn var(--t-dur) var(--t-ease) 420ms backwards;
   }
 
-  .stage-1 { animation-delay: 200ms; }
-  .stage-5 { animation-delay: 2850ms; }
-  .stage-6 { animation-delay: 3150ms; }
+  .stage-1 {
+    animation-delay: 200ms;
+  }
+  .stage-5 {
+    animation-delay: 2850ms;
+  }
+  .stage-6 {
+    animation-delay: 3150ms;
+  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -112,7 +118,9 @@
   letter-spacing: 0.24em;
   margin-right: -0.24em;
   color: var(--paper);
-  text-shadow: 0 0 18px rgba(11, 11, 12, 0.7), 0 0 4px rgba(11, 11, 12, 0.6);
+  text-shadow:
+    0 0 18px rgba(11, 11, 12, 0.7),
+    0 0 4px rgba(11, 11, 12, 0.6);
   line-height: 1;
 }
 
@@ -179,8 +187,265 @@
     #000 96%,
     transparent 100%
   );
-  mask-image: linear-gradient(to right, transparent 0%, #000 4%, #000 96%, transparent 100%);
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 4%,
+    #000 96%,
+    transparent 100%
+  );
   user-select: none;
+}
+
+/* --- the pin ---------------------------------------------------------------
+   A safety pin with three charms, dropped into the empty ground to the left of
+   the seated figure. It clears the artwork on both sides: the left walker
+   starts at x=531 of the canvas and the figure at x=740, so the pin's 120..460
+   band sits between the frame edge and both, with ~70px to spare on the right.
+   That gap is the constraint on how much larger this can go — grow it much
+   past 340 wide and it starts crowding the walker.
+
+   Every number below is the source photograph's own geometry, expressed as a
+   fraction of the 300x402 crop the base was cut to. That is the whole trick —
+   the four layers are positioned by where they actually were in the shot, so
+   reassembled they are pixel-identical to the original, and each charm's
+   `transform-origin` is the real chain link it hangs from rather than a
+   guessed pivot. Charm x/y and origins therefore must not be hand-tweaked
+   independently; they come as a set from the cut.
+--------------------------------------------------------------------------- */
+.hero-pin {
+  position: absolute;
+  /* 120 / 1920 and 175 / 900 of the design canvas; 340 wide, so 455 tall */
+  left: 6.25%;
+  top: 19.444%;
+  width: 17.708%;
+  aspect-ratio: 300 / 402;
+  z-index: 1;
+  /* Only the charms take the pointer; the base must let hover fall through to
+     the tag layered beneath it. */
+  pointer-events: none;
+}
+
+.pin-base {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  filter: drop-shadow(0 4px 7px rgba(11, 11, 12, 0.2));
+  user-select: none;
+}
+
+.pin-charm {
+  position: absolute;
+  display: block;
+  z-index: 2;
+  pointer-events: auto;
+  cursor: pointer;
+  /* `scale` and `rotate` as separate properties, not a `transform` shorthand:
+     the hover lift transitions while the swing keyframes drive rotation, and
+     the two would overwrite each other in a single `transform`. Same reason
+     the spider splits its sway and bob further down. */
+  transition: scale 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pin-charm img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 3px 5px rgba(11, 11, 12, 0.22));
+  user-select: none;
+}
+
+/* source (329,393) 45x117 — pivot at the link, x=358 */
+.charm-board {
+  left: 0;
+  top: 70.896%;
+  width: 15%;
+  height: 29.104%;
+  transform-origin: 64.4% 0%;
+  --swing: 6deg;
+  --dur: 1250ms;
+}
+
+/* source (374,440) 59x67 — pivot at the link, x=402 */
+.charm-flower {
+  left: 15%;
+  top: 82.587%;
+  width: 19.667%;
+  height: 16.667%;
+  transform-origin: 47.5% 0%;
+  --swing: 9deg;
+  --dur: 950ms;
+}
+
+/* source (395,315) 172x183 — pivot at the tag's top corner, (465,322).
+   Behind the base so the chain keeps crossing it. The clip-path is the tag's
+   own parallelogram, which does two jobs: it trims nothing visible (the art is
+   that shape) and it stops this large box from stealing hover from the flower,
+   whose rectangle it would otherwise overlap. */
+.charm-tag {
+  left: 22%;
+  top: 51.493%;
+  width: 57.333%;
+  height: 45.522%;
+  z-index: 0;
+  transform-origin: 40.7% 3.8%;
+  clip-path: polygon(40.1% 1.1%, 98.8% 55.2%, 59.3% 98.4%, 1.2% 40.4%);
+  --swing: 4.5deg;
+  --dur: 1400ms;
+}
+
+/* A pendulum losing energy: overshoot, then four decreasing returns. The
+   amplitudes are fractions of `--swing` so each charm keeps the same decay
+   with its own weight — the board is heavy and slow, the flower light and
+   quick, the paper tag wide and lazy. */
+@keyframes charm-swing {
+  0% {
+    rotate: 0deg;
+  }
+  18% {
+    rotate: calc(var(--swing, 7deg) * -1);
+  }
+  38% {
+    rotate: calc(var(--swing, 7deg) * 0.55);
+  }
+  56% {
+    rotate: calc(var(--swing, 7deg) * -0.3);
+  }
+  72% {
+    rotate: calc(var(--swing, 7deg) * 0.16);
+  }
+  86% {
+    rotate: calc(var(--swing, 7deg) * -0.07);
+  }
+  100% {
+    rotate: 0deg;
+  }
+}
+
+.pin-charm:hover {
+  scale: 1.04;
+}
+
+.charm-tag:hover {
+  /* Largest of the three; the same lift would read as a jump. */
+  scale: 1.03;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pin-charm:hover {
+    animation: charm-swing var(--dur, 1100ms) ease-in-out;
+  }
+}
+
+/* --- the two invitations ---------------------------------------------------
+   Where these sit is decided by the composition, not by taste. After v22 the
+   only clear band across the width is y 794..874 — between the boots and the
+   foot bar, 80px. That fits one element with room to breathe, not two stacked,
+   so the scroll nudge takes it (it has to be centred and at the bottom to mean
+   anything) and the button goes into the open ground under the pin, where it
+   also gives the left column something to answer the nav shapes on the right.
+--------------------------------------------------------------------------- */
+
+/* The same button as `.view-toggle`, re-inked. That one is built for the void:
+   paper text inside a translucent-paper hairline, which on the poster's light
+   ground would be a white box on near-white. Size, weight, tracking, padding
+   and the ember hover are all held identical, so the two are one component in
+   two finishes rather than two buttons that happen to look alike. */
+.poster-cta {
+  position: absolute;
+  left: 11%;
+  top: 76%;
+  z-index: 2;
+  display: inline-block;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.521cqw;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  /* Balances the trailing letter-space so the label sits centred in its box
+     instead of drifting left — the bordered equivalent of the `margin-right`
+     trick used on the bare micro-type elsewhere. */
+  text-indent: 0.24em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  color: var(--void);
+  background: transparent;
+  border: 1px solid rgba(11, 11, 12, 0.32);
+  padding: 0.542cqw 1.25cqw;
+  transition:
+    border-color 200ms ease,
+    color 200ms ease;
+}
+
+.poster-cta:hover,
+.poster-cta:focus-visible {
+  border-color: var(--ember);
+  color: var(--ember);
+}
+
+.poster-scroll {
+  position: absolute;
+  left: 50%;
+  bottom: 5%;
+  /* Centring lives here; the bounce lives on the chevron. Putting both on this
+     element would mean one `translate` fighting the other. */
+  translate: -50% 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.42cqw;
+  color: var(--ash);
+  opacity: 0.62;
+  pointer-events: none;
+}
+
+.poster-scroll-label {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.469cqw;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  margin-right: -0.22em;
+  white-space: nowrap;
+}
+
+.poster-scroll-chev {
+  display: block;
+  width: 0.94cqw;
+  height: auto;
+}
+
+/* Slow enough to read as breathing rather than blinking. */
+@keyframes scroll-nudge {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 5px;
+  }
+}
+
+@keyframes scroll-breathe {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .poster-scroll {
+    animation: scroll-breathe 2800ms ease-in-out infinite;
+  }
+
+  .poster-scroll-chev {
+    animation: scroll-nudge 2800ms ease-in-out infinite;
+  }
 }
 
 /* --- the bars ------------------------------------------------------------ */
@@ -300,6 +565,44 @@
     width: 11cqw;
     height: 11cqw;
     right: 3.5%;
+  }
+
+  /* The pin needs empty ground to sit in, and portrait has none: `cover` crops
+     to the figure, so the band the pin occupies on desktop is off-frame and
+     what is left is all subject. Scaled to fit it would be ~50px wide and
+     unreadable; placed anyway it would land on the figure. It is decoration,
+     so it steps out rather than crowding the shot. */
+  .hero-pin {
+    display: none;
+  }
+
+  /* Both of these are sized in `cqw`, which is a fraction of the *container* —
+     at 390px wide the desktop values come out around 2px. They need their own
+     scale here, and their own places: the portrait crop puts the boots at ~90%
+     of the frame, so the roomy band is now above the figure, not below it. The
+     button takes that; the nudge stays at the bottom but folds to a single row
+     to fit the ~38px that is left. */
+  .poster-cta {
+    left: 6%;
+    top: 89%;
+    translate: -50% 0;
+    font-size: 2.6cqw;
+    padding: 2cqw 4.8cqw;
+  }
+
+  .poster-scroll {
+    flex-direction: row;
+    align-items: center;
+    gap: 1.6cqw;
+    bottom: 3.5%;
+  }
+
+  .poster-scroll-label {
+    font-size: 2.3cqw;
+  }
+
+  .poster-scroll-chev {
+    width: 3.4cqw;
   }
 
   .poster-foot {
@@ -589,8 +892,16 @@
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 42% 48% at 50% 46%, rgba(201, 96, 26, 0.13), transparent 70%),
-    radial-gradient(ellipse 56% 60% at 50% 48%, rgba(237, 233, 226, 0.085), transparent 72%);
+    radial-gradient(
+      ellipse 42% 48% at 50% 46%,
+      rgba(201, 96, 26, 0.13),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 56% 60% at 50% 48%,
+      rgba(237, 233, 226, 0.085),
+      transparent 72%
+    );
   filter: blur(26px);
   transition: opacity 700ms var(--t-ease);
 }
@@ -629,13 +940,25 @@
 }
 
 @keyframes shirtSlideOut {
-  from { transform: translateX(0); opacity: 1; }
-  to { transform: translateX(-42%); opacity: 0; }
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-42%);
+    opacity: 0;
+  }
 }
 
 @keyframes shirtSlideIn {
-  from { transform: translateX(42%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(42%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 .slide-out {
@@ -663,10 +986,16 @@
   background: transparent;
   color: var(--paper);
   cursor: pointer;
-  transition: border-color 200ms ease, background 200ms ease, transform 200ms ease;
+  transition:
+    border-color 200ms ease,
+    background 200ms ease,
+    transform 200ms ease;
 }
 
-.arrow-next svg { width: 20px; height: 20px; }
+.arrow-next svg {
+  width: 20px;
+  height: 20px;
+}
 
 .arrow-next:hover,
 .arrow-next:focus-visible {
@@ -676,8 +1005,15 @@
 }
 
 @media (max-width: 767px) {
-  .arrow-next { width: 40px; height: 40px; right: -0.25rem; }
-  .arrow-next svg { width: 17px; height: 17px; }
+  .arrow-next {
+    width: 40px;
+    height: 40px;
+    right: -0.25rem;
+  }
+  .arrow-next svg {
+    width: 17px;
+    height: 17px;
+  }
 }
 
 .shirt-controls {
@@ -700,7 +1036,10 @@
   border: 1px solid rgba(237, 233, 226, 0.28);
   padding: 0.65rem 1.5rem;
   cursor: pointer;
-  transition: border-color 200ms ease, background 200ms ease, color 200ms ease;
+  transition:
+    border-color 200ms ease,
+    background 200ms ease,
+    color 200ms ease;
 }
 
 .view-toggle:hover,
@@ -718,7 +1057,10 @@
   text-align: center;
 }
 
-.shirt-meta-sep { margin: 0 0.5rem; color: rgba(110, 108, 106, 0.5); }
+.shirt-meta-sep {
+  margin: 0 0.5rem;
+  color: rgba(110, 108, 106, 0.5);
+}
 
 /* Bracketed accession tags on the metadata line. */
 .cat-tag {
@@ -747,7 +1089,11 @@
   }
 }
 
-.pip-row { display: flex; align-items: center; gap: 0.5rem; }
+.pip-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
 
 .pip {
   display: block;
@@ -757,7 +1103,9 @@
   transition: background 260ms ease;
 }
 
-.pip-on { background: var(--ember); }
+.pip-on {
+  background: var(--ember);
+}
 
 /* ---------------------------------------------------------------------------
    Shapes — scattered in the hero on load, scrubbed into a centered row
@@ -990,7 +1338,11 @@
      declaration is the fallback for browsers without `color-mix` — those
      keep the old paper, which is only wrong in the reduced-motion case. */
   color: var(--paper);
-  color: color-mix(in srgb, var(--void) calc(var(--ink, 0) * 100%), var(--paper));
+  color: color-mix(
+    in srgb,
+    var(--void) calc(var(--ink, 0) * 100%),
+    var(--paper)
+  );
   opacity: var(--lo, 0);
 }
 
@@ -1012,7 +1364,8 @@
   /* The bottom value used to be 0 because the pull-quote block carried the
      space down to the footer. With that gone the section has to hold its own
      tail, or the footer sits straight under the plates. */
-  padding: clamp(4rem, 14vh, 9rem) clamp(1rem, 5vw, 4rem) clamp(3rem, 10vh, 6.5rem);
+  padding: clamp(4rem, 14vh, 9rem) clamp(1rem, 5vw, 4rem)
+    clamp(3rem, 10vh, 6.5rem);
 }
 
 .material-top {
@@ -1138,7 +1491,8 @@
   /* The bottom padding clears the fixed corner marks, which sit ~1.5rem off the
      viewport floor and would otherwise land on top of the bottom bar at the end
      of the scroll. */
-  padding: clamp(4rem, 12vh, 7rem) clamp(1rem, 5vw, 4rem) clamp(3.5rem, 9vh, 5.5rem);
+  padding: clamp(4rem, 12vh, 7rem) clamp(1rem, 5vw, 4rem)
+    clamp(3.5rem, 9vh, 5.5rem);
 }
 
 .site-foot-main {
@@ -1268,7 +1622,11 @@
 /* ---------------------------------------------------------------------------
    Route pages
 --------------------------------------------------------------------------- */
-.page { min-height: 100svh; display: flex; flex-direction: column; }
+.page {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
 
 .page-head {
   display: flex;
@@ -1288,7 +1646,10 @@
   text-decoration: none;
 }
 
-.page-nav { display: flex; gap: clamp(1rem, 3vw, 2.25rem); }
+.page-nav {
+  display: flex;
+  gap: clamp(1rem, 3vw, 2.25rem);
+}
 
 .page-nav-link {
   font-family: var(--font-mono), ui-monospace, monospace;
@@ -1300,7 +1661,9 @@
   transition: color 200ms ease;
 }
 
-.page-nav-link:hover { color: var(--paper); }
+.page-nav-link:hover {
+  color: var(--paper);
+}
 
 .page-main {
   flex: 1;
@@ -1354,8 +1717,14 @@
   color: var(--ash);
 }
 
-.page-foot-link { color: var(--ash); text-decoration: none; transition: color 200ms ease; }
-.page-foot-link:hover { color: var(--paper); }
+.page-foot-link {
+  color: var(--ash);
+  text-decoration: none;
+  transition: color 200ms ease;
+}
+.page-foot-link:hover {
+  color: var(--paper);
+}
 
 /* Contact */
 .contact-links {
@@ -1374,10 +1743,15 @@
   text-decoration: none;
   border-bottom: 1px solid rgba(237, 233, 226, 0.24);
   padding-bottom: 0.15rem;
-  transition: border-color 220ms ease, color 220ms ease;
+  transition:
+    border-color 220ms ease,
+    color 220ms ease;
 }
 
-.contact-link:hover { color: var(--ember); border-color: var(--ember); }
+.contact-link:hover {
+  color: var(--ember);
+  border-color: var(--ember);
+}
 
 /* ---------------------------------------------------------------------------
    Legal — /terms and /privacy
@@ -1423,7 +1797,9 @@
   color: var(--paper);
 }
 
-.legal-h-num { color: var(--ember); }
+.legal-h-num {
+  color: var(--ember);
+}
 
 /* `role="list"` is on these in the markup: Tailwind's preflight strips
    `list-style` from every list, and Safari drops list semantics along with the
@@ -1487,10 +1863,15 @@
   color: var(--paper);
   text-decoration: none;
   border-bottom: 1px solid rgba(237, 233, 226, 0.24);
-  transition: border-color 220ms ease, color 220ms ease;
+  transition:
+    border-color 220ms ease,
+    color 220ms ease;
 }
 
-.legal-link:hover { color: var(--ember); border-color: var(--ember); }
+.legal-link:hover {
+  color: var(--ember);
+  border-color: var(--ember);
+}
 
 /* The table scrolls inside its own box rather than pushing the page sideways:
    two columns of prose cannot compress below ~20rem and the measure is
@@ -1556,11 +1937,15 @@
 }
 
 @media (min-width: 640px) {
-  .shop-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .shop-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (min-width: 1024px) {
-  .shop-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .shop-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .shop-card {
@@ -1569,7 +1954,9 @@
   transition: background 260ms ease;
 }
 
-.shop-card:hover { background: var(--slate); }
+.shop-card:hover {
+  background: var(--slate);
+}
 
 .shop-card-figure {
   aspect-ratio: 544 / 458;
@@ -1577,7 +1964,11 @@
   place-items: center;
 }
 
-.shop-card-figure img { width: 100%; height: 100%; object-fit: contain; }
+.shop-card-figure img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 
 .shop-card-name {
   margin-top: 0.5rem;
@@ -1717,7 +2108,10 @@
   background: rgba(11, 11, 12, 0.55);
   color: var(--paper);
   cursor: pointer;
-  transition: border-color 200ms ease, background 200ms ease, transform 200ms ease;
+  transition:
+    border-color 200ms ease,
+    background 200ms ease,
+    transform 200ms ease;
 }
 
 .product-nav svg {
@@ -1898,7 +2292,9 @@
   pointer-events: none;
 }
 
-.color-opt:hover { border-color: rgba(237, 233, 226, 0.5); }
+.color-opt:hover {
+  border-color: rgba(237, 233, 226, 0.5);
+}
 
 /* The outline can't sit on the hidden input, so the ring wears it instead. */
 .color-opt:focus-within {
@@ -1906,7 +2302,9 @@
   outline-offset: 3px;
 }
 
-.color-opt-on { border-color: var(--ember); }
+.color-opt-on {
+  border-color: var(--ember);
+}
 
 /* The hairline is doing real work: without it the black swatch is a hole in the
    void rather than a disc, and the white one glares. */
@@ -1917,8 +2315,12 @@
   border: 1px solid rgba(237, 233, 226, 0.35);
 }
 
-.color-dot[data-color="black"] { background: #101012; }
-.color-dot[data-color="white"] { background: var(--paper); }
+.color-dot[data-color="black"] {
+  background: #101012;
+}
+.color-dot[data-color="white"] {
+  background: var(--paper);
+}
 
 /* --- Size ----------------------------------------------------------------
    Real radios, visually hidden and drawn as boxes — see `ProductPurchase`.
@@ -1966,7 +2368,9 @@
   font-size: 11px;
   letter-spacing: 0.18em;
   cursor: pointer;
-  transition: border-color 200ms ease, color 200ms ease;
+  transition:
+    border-color 200ms ease,
+    color 200ms ease;
 }
 
 /* Hidden but still focusable and still a radio — the keyboard behaviour and
@@ -2012,7 +2416,9 @@
   letter-spacing: 0.28em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: border-color 200ms ease, color 200ms ease;
+  transition:
+    border-color 200ms ease,
+    color 200ms ease;
 }
 
 .product-cart:hover,
@@ -2035,7 +2441,9 @@
   color: var(--paper-dim);
   text-decoration: none;
   border-bottom: 1px solid rgba(237, 233, 226, 0.24);
-  transition: color 200ms ease, border-color 200ms ease;
+  transition:
+    color 200ms ease,
+    border-color 200ms ease;
 }
 
 .product-note-link:hover {
@@ -2114,7 +2522,9 @@
   letter-spacing: 0.28em;
   text-transform: uppercase;
   text-decoration: none;
-  transition: border-color 220ms ease, color 220ms ease;
+  transition:
+    border-color 220ms ease,
+    color 220ms ease;
 }
 
 /* Hover belongs to the ones you can actually go to. */
@@ -2161,15 +2571,23 @@ a.riot-tab:hover {
   white-space: nowrap;
 }
 
-.riot-ticker-rev .riot-ticker-track { animation-direction: reverse; }
+.riot-ticker-rev .riot-ticker-track {
+  animation-direction: reverse;
+}
 
 /* Only the riot state runs the ticker; ORDER holds it still. Unreachable while
    the category nav occupies the bar — see the note in `ShopChaos`. */
-.riot:not(.riot-on) .riot-ticker-track { animation-play-state: paused; }
+.riot:not(.riot-on) .riot-ticker-track {
+  animation-play-state: paused;
+}
 
 @keyframes riot-scroll {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(calc(-50% - 1.25rem), 0, 0); }
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(calc(-50% - 1.25rem), 0, 0);
+  }
 }
 
 /* --- The field ---------------------------------------------------------- */
@@ -2181,11 +2599,15 @@ a.riot-tab:hover {
 }
 
 @media (min-width: 640px) {
-  .riot-field { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .riot-field {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (min-width: 1024px) {
-  .riot-field { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .riot-field {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .riot-slot {
@@ -2350,11 +2772,15 @@ a.riot-tab:hover {
    Keep the collage — it is layout, not animation — but stop everything that
    moves: no ticker, no eased re-flow, and ShopChaos never builds the tilt. */
 @media (prefers-reduced-motion: reduce) {
-  .riot-ticker-track { animation: none; }
+  .riot-ticker-track {
+    animation: none;
+  }
   .riot-slot,
   .riot-plate,
   .riot-tape,
-  .riot-tag { transition: none; }
+  .riot-tag {
+    transition: none;
+  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -2544,7 +2970,9 @@ html.lenis body {
    Reduced motion
 --------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
