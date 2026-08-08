@@ -61,11 +61,15 @@ export class CuttingAnimator {
     intensity: number,
     reduced: boolean,
   ): void {
+    // Intensity gates everything, including the reduced-motion path. Checking
+    // it second meant a reduced-motion visitor got the weave at full strength
+    // no matter where they were on the page — including over the hero, which
+    // is exactly what the intensity ramp exists to prevent.
+    if (intensity <= 0.01) return;
     if (reduced) {
-      this.drawWeave(ctx, w, h, exclude, 0.045);
+      this.drawWeave(ctx, w, h, exclude, 0.045 * intensity);
       return;
     }
-    if (intensity <= 0.01) return;
 
     this.drawWeave(ctx, w, h, exclude, 0.035 * intensity);
 

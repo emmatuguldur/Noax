@@ -189,9 +189,20 @@ export default function ShapeField() {
         fieldRef.current.style.setProperty("--assembled", String(converge));
       }
 
+      /**
+       * The cutting backdrop belongs to the shape row, so it is keyed to the
+       * poster clearing the viewport — not to `converge`, which starts rising
+       * on the very first pixel of scroll and so had the scissors drawing
+       * across the photograph while it was still on screen. The row finishes
+       * assembling at scrollY = 0.7 * vh, well before this ramp opens, so by
+       * the time anything is being cut the four are already in place under
+       * "Four ways in".
+       */
+      const cutting = smoothstep(posterH * 0.9, posterH * 1.3, scrolled);
+
       if (ctx && canvasRef.current) {
         ctx.clearRect(0, 0, view.w, view.h);
-        cuttingRef.current?.draw(ctx, view.w, view.h, now, null, converge, still);
+        cuttingRef.current?.draw(ctx, view.w, view.h, now, null, cutting, still);
       }
 
       for (let i = 0; i < NAV_ITEMS.length; i += 1) {

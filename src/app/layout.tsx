@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo, Instrument_Serif, Inter, Martian_Mono } from "next/font/google";
 
-import CuttingBackground from "@/components/CuttingBackground";
 import SmoothScroll from "@/components/SmoothScroll";
 
 import "./globals.css";
@@ -66,7 +65,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body>
         <SmoothScroll />
-        <CuttingBackground />
         {children}
       </body>
     </html>
