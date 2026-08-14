@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import HeroVinyl from "@/components/HeroVinyl";
 import { HERO_COPY } from "@/data/copy";
 
 /**
@@ -56,7 +57,14 @@ export default function Hero() {
         draggable={false}
       />
 
-      {/* The pin, in the empty ground left of the figure. Four layers, because
+      {/* The record, in the left margin. v26's addition, and the reason the pin
+          and the button below it now sit on the right — the composition mockup
+          gives the left third to the vinyl, and the pin was the only thing
+          occupying it. The only client component in the hero: everything else
+          here is static, and the plate deliberately stays that way. */}
+      <HeroVinyl />
+
+      {/* The pin, in the empty ground right of the figure. Four layers, because
           three of them have to be able to move on their own: the base carries
           the pin, the wire script and the chains and never moves; each charm
           is cut at the chain link it hangs from so it can swing about that
@@ -93,10 +101,10 @@ export default function Hero() {
 
       {/* The plain-language way in. The four nav shapes already reach /shop,
           but they read as a puzzle before they read as a menu, so this is the
-          same destination stated outright. It sits under the pin rather than
-          centred because the only clear band across the middle is the 80px
-          between the boots and the foot bar — enough for one element, and the
-          scroll nudge has the better claim on it. */}
+          same destination stated outright. v32 moved it down into the frame's
+          bottom-right corner, off the reference — it now shares the band above
+          the foot bar with the scroll nudge rather than sitting under the pin.
+          See the note over `.poster-cta` in `globals.css`. */}
       <Link href="/shop" className="poster-cta">
         {HERO_COPY.shopCta}
       </Link>

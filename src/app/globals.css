@@ -202,13 +202,236 @@
   user-select: none;
 }
 
+/* --- the record ------------------------------------------------------------
+   A compact cluster in the hero's lower-left: the record's edge showing from
+   behind three overlapping polaroids. Scroll turns the ring, but only while the
+   cursor is on or near it — see `HeroVinyl.tsx`.
+
+   Geometry, in the 1920x920 design space. v31 stopped choosing these and
+   solved them from the reference instead — see the note on PITCH in
+   `HeroVinyl.tsx` for the fit and the calibration it rests on.
+
+     pivot         (-20, 492)  record centre, and the ring's centre
+     orbit radius  285
+     card          150 x 181   the artwork's card, inside a padded canvas
+     disc radius   307
+
+   `.hero-vinyl` is the orbit box — a square of 2*285=570 centred on the pivot.
+   Sizing it to the orbit rather than to the artwork is what lets `HeroVinyl`
+   take the radius as "half my own width" and never carry a pixel constant of
+   its own. It is also the one scale knob for the whole cluster: the disc, the
+   cards and the hint are all percentages of this box, so `width` below sets
+   how big the composition is and nothing else needs touching.
+
+     left    (-20 - 285) / 1920 = -15.885%
+     top     (492 - 285) /  920 =  22.500%
+     width   570 / 1920         =  29.688%   (square, so 570 tall = 61.957%)
+
+   The record runs out of frame at the left with its flat cut at x=-24, hidden
+   by `.poster-hero`'s `overflow: hidden`. Its rim reaches x=288, but the cards
+   cover that at every height where the disc is widest, so what actually shows
+   is a strip about 92px wide down the left edge — the label at mid-height, and
+   grooves above and below it. That is the reference's read: the record mostly
+   behind, only its edge out.
+
+   Cards land at (265, 492) and (181, 290) / (181, 694), spanning roughly
+   x 92..360, y 188..796. Composition: x 0..360, y 185..799 — against the
+   reference's x 0..377, y 183..798. Clear of the left walker (x=531) and of
+   both black rules (which end at 102 and start at 894).
+--------------------------------------------------------------------------- */
+.hero-vinyl {
+  position: absolute;
+  left: -15.885%;
+  top: 22.5%;
+  width: 29.688%;
+  aspect-ratio: 1;
+  z-index: 1;
+  /* Scenery, and the cursor gate is measured against this box rather than
+     delivered to it — so nothing here needs to take the pointer, and the
+     poster's own hover targets stay reachable through it. */
+  pointer-events: none;
+}
+
+/* The record.
+   ---------------------------------------------------------------------------
+   `vinyl.png` is half a record: measured, the disc centre is (349, 320) with a
+   radius of 230, and the artwork is cut flat at x=346 — three pixels shy of
+   that centre. It carries its own alpha (85.6% of the file), so the round edge
+   is the file's own and nothing here is knocking a background out.
+
+   Shown at radius 307, i.e. scale 307/230 = 1.3348:
+
+     width   960 * 1.3348 / 570 = 224.81%    height follows the aspect ratio
+     left    centre at x=-20, so 349*1.3348 back from it
+     top     centre at y=492, so 320*1.3348 back from it
+
+   Which lands the flat cut at x=-24 and the rim at x=288, with the disc running
+   y 185..799 — the same vertical extent the reference gives it, and inside both
+   black rules. The label reaches x=84, so it reads at the frame's edge level
+   with the middle of the hero, and the straight side is outside the canvas.
+
+   `max-width: none` is load-bearing, not tidying. Tailwind's preflight sets
+   `img { max-width: 100% }`, which silently clamped this 218%-wide image to its
+   container and shrank it — far enough left that every pixel of the record fell
+   outside the canvas and `overflow: hidden` ate it. That is why the vinyl was
+   invisible in v28 and visible in v27, when it was still a div with a
+   background-image. Any percentage width over 100% on an <img> needs this. */
+.vinyl-disc {
+  position: absolute;
+  left: -31.719%;
+  top: -24.93%;
+  width: 224.81%;
+  max-width: none;
+  height: auto;
+  filter: drop-shadow(0 8px 20px rgba(11, 11, 12, 0.28));
+  user-select: none;
+}
+
+.vinyl-rig {
+  position: absolute;
+  inset: 0;
+}
+
+/* The finished cards, placed whole.
+   ---------------------------------------------------------------------------
+   No border, no padding, no bed: `print-0N.png` already contains the grey card,
+   the mat and the photograph, each leaning at its own angle. Anything drawn
+   here would be a second frame around a framed picture.
+
+   Sized by *height* on purpose. The three canvases are 687, 542 and 496 wide
+   because each export left a different amount of transparent padding, but the
+   card inside every one of them is the same 476x573 — so a common height
+   renders them at a common scale, and a common width would not. `width: auto`
+   then lets each canvas be as wide as its own padding requires, and the
+   `nudgeX` in `heroPolaroids.ts` re-centres the card inside it.
+
+   181 / 570 of the box. The shadow is a `drop-shadow` filter rather than a
+   `box-shadow` because the element's box is the transparent canvas: a box
+   shadow would trace that rectangle instead of the tilted card inside it.
+
+   The cards come out 150 wide, matching the reference, but 181 tall against its
+   ~155: the reference was mocked up with landscape frames and the finished
+   cards are portrait (476x573). Width is the dimension that reads as "how big",
+   so it is the one held; the extra height is the one thing here that cannot
+   match the reference without different artwork.
+
+   `max-width: none` for the same reason as the record above, though here it is
+   a latent trap rather than a bug that fired: the widest canvas comes out at
+   215 against a 570 container, so preflight's `max-width: 100%` does not clamp
+   it *yet*. If it ever did, the explicit `height` would stay put and the card
+   would render squashed rather than smaller — the hardest kind of this bug to
+   spot, because the image would still be on screen. */
+.vinyl-polaroid {
+  position: absolute;
+  display: block;
+  height: 31.754%;
+  width: auto;
+  max-width: none;
+  filter: drop-shadow(0 5px 11px rgba(11, 11, 12, 0.3));
+  /* `left`/`top` carry the rest position and `transform` carries the offset
+     from it, so the element the compositor promotes never changes size. */
+  will-change: transform, opacity;
+  user-select: none;
+}
+
+/* "merch", written across the record's label.
+   ---------------------------------------------------------------------------
+   The label is the one light patch in the composition — centred on the disc at
+   (-20, 492) with a radius of 104, so the part of it actually on canvas is the
+   sliver x 0..84, y 388..596. The word sits inside that, turned to read bottom
+   to top the way a record's own type runs round its centre.
+
+   `rotate(-90deg)` rather than `writing-mode: vertical-rl`: this is a joined
+   script, and vertical writing modes lay Latin out glyph by glyph, which breaks
+   the join between the letters. Rotating the whole run keeps it one stroke.
+
+     left  ( 36 - -305) / 570 = 59.825%      centred on (36, 488)
+     top   (488 -  207) / 570 = 49.298% */
+.vinyl-word {
+  position: absolute;
+  left: 59.825%;
+  top: 49.298%;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  font-family: var(--font-script), ui-serif, cursive;
+  font-size: 1.77cqw;
+  line-height: 1;
+  white-space: nowrap;
+  /* Ink on a paper label, not the site's near-black. */
+  color: rgba(11, 11, 12, 0.78);
+  user-select: none;
+}
+
+/* The rotation hint: the word, and the arrow under it pointing at the stack.
+   Dim until the cursor opens the gate, at which point `HeroVinyl` adds
+   `.is-near` — so the mark is lit by the same test that decides whether
+   scrolling will do anything, and the two cannot disagree.
+
+   Reference puts the arrow in the gap between the top and middle cards, off to
+   their right, at x 285..349, y 305..381. The box starts 20px above that to
+   take the label, and the column is laid out so the arrow still lands where the
+   reference has it:
+
+     left   (285 - -305) / 570 = 103.509%
+     top    (285 -  207) / 570 =  13.684%
+     width          64   / 570 =  11.228%   (the viewBox is 48:57, so 76 tall) */
+.vinyl-hint {
+  position: absolute;
+  left: 103.509%;
+  top: 13.684%;
+  width: 11.228%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.32cqw;
+  color: var(--void);
+  opacity: 0.3;
+  transition: opacity 260ms ease;
+}
+
+.vinyl-hint-label {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.42cqw;
+  letter-spacing: 0.2em;
+  /* Balances the trailing letter-space so the word sits centred over the
+     arrow rather than a fifth of an em to the left of it. */
+  margin-right: -0.2em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: opacity 260ms ease;
+}
+
+.vinyl-hint-arrow {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.hero-vinyl.is-near .vinyl-hint {
+  opacity: 0.72;
+}
+
+/* Said and done. `HeroVinyl` latches `.is-used` once the ring has actually been
+   turned, and the word fades out over most of a second on the site's own ease —
+   slow enough to read as the hint retiring rather than as something switching
+   off. Only the word goes: the arrow is part of the composition in the
+   reference, not just an affordance, so it stays. */
+.hero-vinyl.is-used .vinyl-hint-label {
+  opacity: 0;
+  transition: opacity 900ms var(--t-ease);
+}
+
 /* --- the pin ---------------------------------------------------------------
-   A safety pin with three charms, dropped into the empty ground to the left of
-   the seated figure. It clears the artwork on both sides: the left walker
-   starts at x=531 of the canvas and the figure at x=740, so the pin's 120..460
-   band sits between the frame edge and both, with ~70px to spare on the right.
-   That gap is the constraint on how much larger this can go — grow it much
+   A safety pin with three charms, dropped into the empty ground to the *right*
+   of the seated figure — v26 mirrored it across the canvas to clear the left
+   margin for the record, and took `.poster-cta` with it so the column stays
+   together. The clearances below are the original left-hand numbers reflected:
+   the pin's 120..460 band becomes 1460..1800, which sits outside the rightmost
+   walker (it ends at ~1540) with the frame edge to its right.
+   That overlap is the constraint on how much larger this can go — grow it much
    past 340 wide and it starts crowding the walker.
+
+   The artwork is *not* flipped, only moved: the pin points the same way it did
+   in the shot, and the charm geometry below is untouched.
 
    Every number below is the source photograph's own geometry, expressed as a
    fraction of the 300x402 crop the base was cut to. That is the whole trick —
@@ -220,10 +443,23 @@
 --------------------------------------------------------------------------- */
 .hero-pin {
   position: absolute;
-  /* 120 / 1920 and 175 / 900 of the design canvas; 340 wide, so 455 tall */
-  left: 6.25%;
-  top: 19.444%;
-  width: 17.708%;
+  /* v32 set these off the reference rather than by eye. The four layers fill
+     essentially the whole box — measured, their opaque union runs x 0.003..0.997
+     and y 0.005..0.995 of it — so the box and the visible pin are the same
+     rectangle and it can be placed directly.
+
+     Reference had the assembly 328 wide at y 305; v33 pulled it back to 288 and
+     lifted it. Height follows the artwork's own 300:402, which is also the
+     cross-check: only the width is ever set, so the pin cannot end up subtly
+     stretched. Shrinking therefore raises the foot on its own — the 40px off
+     the width takes 54 off the bottom before `top` moves at all.
+
+       right   21 / 1920 =  1.094%   (unchanged — still by the frame's edge)
+       top    271 /  920 = 29.500%
+       width  288 / 1920 = 15.000%   (so 386 tall, bottom at 657) */
+  right: 1.094%;
+  top: 29.5%;
+  width: 15%;
   aspect-ratio: 300 / 402;
   z-index: 1;
   /* Only the charms take the pointer; the base must let hover fall through to
@@ -347,25 +583,39 @@
 /* --- the two invitations ---------------------------------------------------
    Where these sit is decided by the composition, not by taste. After v22 the
    only clear band across the width is y 794..874 — between the boots and the
-   foot bar, 80px. That fits one element with room to breathe, not two stacked,
-   so the scroll nudge takes it (it has to be centred and at the bottom to mean
-   anything) and the button goes into the open ground under the pin, where it
-   also gives the left column something to answer the nav shapes on the right.
+   foot bar, 80px. v32 put *both* into it, which the earlier note said would not
+   fit: they are not stacked but set across from each other, the nudge centred
+   at x 960 and the button out at the right. The band is 1920 wide; it was only
+   ever too small to take them one above the other.
 --------------------------------------------------------------------------- */
 
 /* The same button as `.view-toggle`, re-inked. That one is built for the void:
    paper text inside a translucent-paper hairline, which on the poster's light
-   ground would be a white box on near-white. Size, weight, tracking, padding
-   and the ember hover are all held identical, so the two are one component in
-   two finishes rather than two buttons that happen to look alike. */
+   ground would be a white box on near-white. Weight, tracking and the ember
+   hover are still held identical, so the two read as one component in two
+   finishes — but v32 broke the last of it, scaling the type and padding here by
+   1.37 to match the reference. They are no longer the same size. */
 .poster-cta {
   position: absolute;
-  left: 11%;
-  top: 76%;
+  /* Bottom-right corner, rather than mid-height under the pin. v33 lifted it
+     22px off the reference's y=827 and took ~12% off the size with it:
+
+       right   (1920 - 1841) / 1920 =  4.115%   (unchanged)
+       top             805   /  920 = 87.500%
+
+     At ~213x41 that sits y 805..846 — inside the 794..874 band between the
+     boots and the foot bar, with air on both sides of it. It no longer shares a
+     foot line with the scroll nudge (which still ends at 874); the nudge is
+     centred and bottom-anchored by its own logic, so the two are independent. */
+  right: 4.115%;
+  top: 87.5%;
   z-index: 2;
   display: inline-block;
   font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.521cqw;
+  /* v32 scaled these up 1.37 to hit the reference's ~241 design px; v33 took
+     ~12% back off, landing at ~213. Type and padding move together so the box's
+     proportions hold. */
+  font-size: 0.63cqw;
   font-weight: 500;
   letter-spacing: 0.24em;
   /* Balances the trailing letter-space so the label sits centred in its box
@@ -378,7 +628,7 @@
   color: var(--void);
   background: transparent;
   border: 1px solid rgba(11, 11, 12, 0.32);
-  padding: 0.542cqw 1.25cqw;
+  padding: 0.655cqw 1.512cqw;
   transition:
     border-color 200ms ease,
     color 200ms ease;
@@ -581,6 +831,16 @@
     display: none;
   }
 
+  /* Same call as the pin, and for the same reason: `cover` crops the portrait
+     frame to the seated figure, so the left margin the record hangs in is off
+     the canvas entirely. Scaled to what is left it would be a 40px disc sitting
+     on the subject. It steps out rather than crowding the shot. `HeroVinyl`
+     watches the same 767px query and skips its loop entirely here, so this is
+     the paint half of the decision and `useIsCompact` is the other. */
+  .hero-vinyl {
+    display: none;
+  }
+
   /* Both of these are sized in `cqw`, which is a fraction of the *container* —
      at 390px wide the desktop values come out around 2px. They need their own
      scale here, and their own places: the portrait crop puts the boots at ~90%
@@ -588,6 +848,11 @@
      button takes that; the nudge stays at the bottom but folds to a single row
      to fit the ~38px that is left. */
   .poster-cta {
+    /* Undoes the base rule's `right`, which portrait does not want — with both
+       edges pinned the box would stretch across the frame instead of sizing to
+       its label. The `left: 6%` / `translate: -50%` pair below is untouched
+       from before v26. */
+    right: auto;
     left: 6%;
     top: 89%;
     translate: -50% 0;
