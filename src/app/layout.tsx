@@ -1,5 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, Instrument_Serif, Inter, Martian_Mono } from "next/font/google";
+import {
+  Archivo,
+  Instrument_Serif,
+  Inter,
+  Island_Moments,
+  Martian_Mono,
+} from "next/font/google";
 
 import SmoothScroll from "@/components/SmoothScroll";
 
@@ -46,6 +52,22 @@ const serif = Instrument_Serif({
   variable: "--font-serif",
 });
 
+/**
+ * One word, in one place: "merch", handwritten across the record's label in the
+ * hero. Note the plural — the family is `Island_Moments`, not `Island_Moment`,
+ * which is the kind of thing that fails the build rather than degrading.
+ *
+ * It ships a single 400 weight and no italic, so there is nothing to choose and
+ * nothing to fall back to mid-family. Loading a whole face for five characters
+ * is the cost of it being a hand on a printed label rather than a font.
+ */
+const script = Island_Moments({
+  subsets: ["latin"],
+  display: "swap",
+  weight: "400",
+  variable: "--font-script",
+});
+
 export const metadata: Metadata = {
   title: "N.O.U.X — stipple prints on heavyweight cotton",
   description:
@@ -61,7 +83,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${display.variable} ${mono.variable} ${sans.variable} ${serif.variable}`}
+      className={`${display.variable} ${mono.variable} ${sans.variable} ${serif.variable} ${script.variable}`}
     >
       <body>
         <SmoothScroll />
