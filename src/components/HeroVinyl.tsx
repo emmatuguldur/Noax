@@ -430,7 +430,7 @@ export default function HeroVinyl() {
           handwritten face. Decorative: "merch" is already the whole meaning of
           this section, and the cards beneath it carry their own alt text. */}
       <span className="vinyl-word" aria-hidden="true">
-        merch
+        Merch
       </span>
 
       <div className="vinyl-hint">
@@ -439,7 +439,7 @@ export default function HeroVinyl() {
             describes is a mouse wheel over a specific patch of the page, which
             is not an instruction a screen reader can act on. */}
         <span className="vinyl-hint-label" aria-hidden="true">
-          scroll
+          Scroll
         </span>
 
         {/* 48:57 — taller than wide, which is how the reference draws it: an arc
